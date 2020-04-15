@@ -1,0 +1,93 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": {
+  },
+  "hosting": {
+    "public": "dist",
+    "redirects": [
+      {
+        "source": "/about.html",
+        "destination": "/faq.html",
+        "type": 301
+      },
+      {
+        "source": "/static/index.html",
+        "destination": "/",
+        "type": 301
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]-[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/[a-z][a-z]/[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]-[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/[a-z][a-z][a-z]/[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]-[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/[a-z][a-z]-[A-Z][A-Z]/[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]-[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/[a-z][a-z]",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/[a-z][a-z][a-z]",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/[a-z][a-z]-[A-Z][A-Z]",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/view/**",
+        "destination": "/view.html"
+      },
+      {
+        "source": "/faq",
+        "destination": "/faq.html"
+      },
+      {
+        "source": "/faq/*",
+        "destination": "/faq.html"
+      }
+    ],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "serviceworker.js",
+        "headers": [ {
+          "key": "Cache-Control",
+          "value": "max-age=0"
+        } ]
+      },
+      {
+        "source": "*.html",
+        "headers": [ {
+          "key": "Cache-Control",
+          "value": "max-age=0"
+        } ]
+      },
+      {
+        "source": "**/*.@(js|css|png|woff|woff2|mp3)",
+        "headers": [ {
+          "key": "Cache-Control",
+          "value": "max-age=15552000"
+        } ]
+      }
+    ]
+  }
+}

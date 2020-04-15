@@ -1,0 +1,153 @@
+{
+  "app": {
+    "Free and easy to use": "Free and easy to use. Make your entries, spin wheel to pick a random winner. Customize look and feel, save and share wheels.",
+    "Click the Language menu": "Click the Language menu in the upper right to switch to English",
+    "Create your own": "Create your own",
+    "Make your entries here": "Make your entries here",
+    "Error": "Error",
+    "Loaded default entries and options": "Loaded default entries and options",
+    "Random picker": "Random picker",
+    "Removed": "Removed {name}",
+    "authError": "That didn't work. Please try again and you will be prompted to sign in. ({error})"
+  },
+  "appInfo": {
+    "The entries you make": "The entries you make above will be displayed on the wheel. When you click the wheel, it spins and picks a random winner. You can customize the appearance and behavior of the wheel, and save and share wheels with others.",
+    "Version": "Version"
+  },
+  "common": {
+    "Cancel": "Cancel",
+    "Close": "Close",
+    "Delete": "Delete",
+    "Import Twitter users": "Import Twitter users",
+    "Link Google Spreadsheet": "Link Google Spreadsheet",
+    "OK": "OK",
+    "Open": "Open",
+    "Options": "Options",
+    "Save": "Save",
+    "We have a winner!": "We have a winner!"
+  },
+  "opendialog": {
+    "Are you sure": "Are you sure you want to delete <b>{wheelTitle}</b>? This action cannot be undone.",
+    "Delete wheel": "Delete wheel",
+    "No wheels found": "No wheels found in your account. Try saving a wheel!",
+    "Open wheel": "Open wheel",
+    "To open wheels": "To open wheels you need to sign in to an account. Please choose your sign-in method below."
+  },
+  "optionsdialog": {
+    "After spin": "After spin",
+    "Allow duplicates on wheel": "Allow duplicates on wheel",
+    "Animate winning entry": "Animate winning entry",
+    "Apply a theme": "Apply a theme",
+    "Auto-remove winner after 5 seconds": "Auto-remove winner after 5 seconds",
+    "Colors": "Colors",
+    "Custom": "Custom",
+    "Customize colors": "Customize colors",
+    "Display popup with message:": "Display popup with message:",
+    "During spin": "During spin",
+    "From Gallery": "From Gallery",
+    "Image": "Image",
+    "Image in the center of the wheel": "Image in the center of the wheel",
+    "Image size": "Image size",
+    "Launch confetti": "Launch confetti",
+    "Max entries on wheel": "Max entries on wheel",
+    "No": "No",
+    "None": "None",
+    "Pick category": "Pick category",
+    "Pick theme": "Pick theme",
+    "Play click sound when the winner is removed": "Play a click sound when the winner is removed",
+    "Select a gallery picture": "Select a gallery picture",
+    "Sound": "Sound",
+    "Spin time (seconds)": "Spin time (seconds)",
+    "Upload image": "Upload image",
+    "Yes": "Yes",
+    "Your image has been uploaded": "Your image <b>{fileName}</b> has been uploaded successfully. Would you like to use the prominent colors from this image for the sectors of your wheel?"
+  },
+  "profiledropdown": {
+    "Are you sure you want to delete your account": "Are you sure you want to delete your account and all your saved wheels? This action cannot be undone.",
+    "Delete account": "Delete account",
+    "Delete my account": "Delete my account",
+    "Export my data": "Export my data",
+    "Sign out": "Sign out",
+    "Signed in as": "Signed in as {name}",
+    "Your account and your saved wheels have been deleted": "Your account and your saved wheels have been deleted"
+  },
+  "savedialog": {
+    "Save as": "Save as",
+    "Save wheel": "Save wheel",
+    "Select a wheel": "Select a wheel",
+    "Sorry, too many images": "Sorry, this wheel has too many images to be saved in the database. Reduce the number of images and try saving again.",
+    "To save wheels": "To save wheels you need to sign in to an account. Please choose your sign-in method below.",
+    "Wheel saved successfully": "Wheel \"{wheelTitle}\" saved successfully",
+    "Your existing wheels": "Your existing wheels"
+  },
+  "sharedialog": {
+    "Continue": "Continue",
+    "Copy link": "Copy link",
+    "If you continue": "If you continue, you will create a public link to your current wheel, including its names, colors and settings.",
+    "Link copied to the clipboard": "Link copied to the clipboard",
+    "Link to this wheel": "Link to this wheel with current names, colors and settings:",
+    "Shareable link": "Shareable link",
+    "Sorry, too many images": "Sorry, this wheel has too many images to be shared. Reduce the number of images and try saving again.",
+    "They should be able to spin the wheel and": "They should be able to spin the wheel and edit their own copy of the wheel",
+    "They should only be able to spin the wheel": "They should only be able to spin the wheel",
+    "This link will work for anyone": "This link will work for anyone and you can share it by email, website, social media, etc.",
+    "What should a person be able to do": "What should a person be able to do when they use your shared link?"
+  },
+  "sheetdialog": {
+    "Column": "Column",
+    "First row": "First row",
+    "Google sign-in": "Google sign-in",
+    "Is a header and should not be imported": "Is a header and should not be imported",
+    "Link sheet": "Link sheet",
+    "Select a column": "Select a column",
+    "Select a tab": "Select a tab",
+    "Selected spreadsheet": "Selected spreadsheet",
+    "Tab": "Tab",
+    "To import sheets": "To import sheets you need to log in to your Google account. Why? Google needs to know who you are, so they can let you pick one of your spreadsheets.",
+    "When you link a spreadsheet": "When you link a spreadsheet, the wheel will contain the same entries as the spreadsheet. If rows are added or deleted in the spreadsheet, entries are automatically added to or removed from the wheel. The connection will close after one hour.",
+    "added": "{entry} added",
+    "entries added": "{count} entries added"
+  },
+  "sounds": {
+    "Applause": "Applause",
+    "Bell ringing": "Bell ringing",
+    "Cheerful music": "Cheerful music",
+    "Cymbals": "Cymbals",
+    "Dramatic music": "Dramatic music",
+    "Fanfare": "Fanfare",
+    "No sound": "No sound",
+    "Piano music": "Piano music",
+    "Read out the winning name": "Read out the winning name",
+    "Ticking sound": "Ticking sound"
+  },
+  "spinningwheel": {
+    "Click to spin": "Click to spin",
+    "Tap to spin": "Tap to spin",
+    "or press ctrl+enter": "or press ctrl+enter"
+  },
+  "textboxbuttons": {
+    "Add image": "Add image",
+    "Shuffle": "Shuffle",
+    "Sort": "Sort"
+  },
+  "toolbar": {
+    "Exit fullscreen": "Exit fullscreen",
+    "Licenses": "Licenses",
+    "Fullscreen": "Fullscreen",
+    "Language": "Language",
+    "More": "More",
+    "New": "New",
+    "Offline mode": "Offline mode",
+    "Share": "Share",
+    "Unlink Google Spreadsheet": "Unlink Google Spreadsheet"
+  },
+  "twitterdialog": {
+    "Found Twitter users": "Found {userCount} Twitter users who have tweeted about \"{term}\" recently",
+    "Hashtag, like #gdg": "Hashtag, like #gdg",
+    "This search will fetch": "This search will fetch the users who have posted recently on Twitter mentioning the hashtag you enter above. The most recent 600 tweets are considered and no tweet older than 24 hours is included. Twitter user names will start with \"@\"."
+  },
+  "winnerdialog": {
+    "Remove": "Remove",
+    "Remove all instances": "Remove all instances"
+  }
+}

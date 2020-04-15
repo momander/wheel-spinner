@@ -1,0 +1,19 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "shared-wheels",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "readCount",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -1,0 +1,153 @@
+{
+  "app": {
+    "Free and easy to use": "Annonsfri, gratis att använda. Används av lärare och för lotterier. Ange namn och snurra hjulet för att välja en slumpmässig vinnare. Anpassa utseende och känsla, spara och dela hjul.",
+    "Click the Language menu": "Klicka på \"Language\"-menyn uppe till höger om du vill byta till svenska",
+    "Create your own": "Skapa din egen",
+    "Make your entries here": "Ange dina noteringar här",
+    "Error": "Fel",
+    "Loaded default entries and options": "Standard-poster och bilder inladdade",
+    "Random picker": "Slumpmässig namnväljare",
+    "Removed": "{name} har tagits bort",
+    "authError": "Det fungerade inte. Var vänlig försök igen och du kommer att bli ombedd att logga in. ({error})"
+  },
+  "appInfo": {
+    "The entries you make": "Posterna du anger ovan visas på hjulet. När du klickar på hjulet snurrar det och väljer en slumpmässig vinnare. Du kan anpassa utseendet och beteendet på hjulet och spara och dela hjul med andra.",
+    "Version": "Version"
+  },
+  "common": {
+    "Cancel": "Avbryt",
+    "Close": "Stäng",
+    "Delete": "Radera",
+    "Import Twitter users": "Importera Twitter-användare",
+    "Link Google Spreadsheet": "Länka till Google-kalkylark",
+    "OK": "OK",
+    "Open": "Öppna",
+    "Options": "Alternativ",
+    "Save": "Spara",
+    "We have a winner!": "Vi har en vinnare!"
+  },
+  "opendialog": {
+    "Are you sure": "Är du säker på att du vill radera <b>{wheelTitle}</b>? Den här åtgärden kan inte ångras.",
+    "Delete wheel": "Radera hjul",
+    "No wheels found": "Inga hjul hittades i ditt konto. Prova att spara ett hjul!",
+    "Open wheel": "Öppna hjul",
+    "To open wheels": "Du behöver vara inloggad för att kunna öppna ett hjul. Vänligen välj inloggningsmetod nedan."
+  },
+  "optionsdialog": {
+    "After spin": "Efter snurr",
+    "Allow duplicates on wheel": "Tillåt duplicerade namn på hjulet",
+    "Animate winning entry": "Animera vinnarens namn",
+    "Apply a theme": "Använd ett tema",
+    "Auto-remove winner after 5 seconds": "Radera automatiskt vinnaren efter 5 sekunder",
+    "Colors": "Färger",
+    "Custom": "Personalisera",
+    "Customize colors": "Anpassa färger",
+    "Display popup with message:": "Visa popup med meddelandet:",
+    "During spin": "Under snurr",
+    "From Gallery": "Från Galleri",
+    "Image": "Bild",
+    "Image in the center of the wheel": "Bild i mitten på hjulet",
+    "Image size": "Bildstorlek",
+    "Launch confetti": "Kasta konfetti",
+    "Max entries on wheel": "Max antal poster på hjulet",
+    "No": "Nej",
+    "None": "Ingen",
+    "Pick category": "Välj kategori",
+    "Pick theme": "Välj tema",
+    "Play click sound when the winner is removed": "Spela ett klickljud när vinnaren tas bort",
+    "Select a gallery picture": "Välj galleribild",
+    "Sound": "Ljud",
+    "Spin time (seconds)": "Snurr tid (sekunder)",
+    "Upload image": "Ladda upp bild",
+    "Yes": "Ja",
+    "Your image has been uploaded": "Din bild <b>{fileName}</b> har laddats upp. Vill du använda de framträdande färgerna från den här bilden för sektorerna på ditt hjul?"
+  },
+  "profiledropdown": {
+    "Are you sure you want to delete your account": "Är du säker på att du vill radera ditt konto och alla dina sparade hjul? Den här åtgärden kan inte ångras.",
+    "Delete account": "Radera konto",
+    "Delete my account": "Radera mitt konto",
+    "Export my data": "Exportera mina data",
+    "Sign out": "Logga ut",
+    "Signed in as": "Inloggad som {name}",
+    "Your account and your saved wheels have been deleted": "Ditt konto och dina sparade hjul har raderats"
+  },
+  "savedialog": {
+    "Save as": "Spara som",
+    "Save wheel": "Spara hjul",
+    "Select a wheel": "Välj ett hjul",
+    "Sorry, too many images": "Tyvärr, det här hjulet har för många bilder för att sparas i databasen. Minska antalet bilder och försök spara igen.",
+    "To save wheels": "För att spara hjul måste du logga in på ett konto. Välj inloggningsmetod nedan.",
+    "Wheel saved successfully": "Hjul \"{wheelTitle}\" sparat",
+    "Your existing wheels": "Dina existerande hjul"
+  },
+  "sharedialog": {
+    "Continue": "Fortsätt",
+    "Copy link": "Kopiera länk",
+    "If you continue": "Om du fortsätter, skapar du en offentlig länk till ditt aktuella hjul, inklusive dess namn, färger och inställningar.",
+    "Link copied to the clipboard": "Länk kopierad till urklipp",
+    "Link to this wheel": "Länk till detta hjul med dessa namn, färger och inställningar:",
+    "Shareable link": "Delbar länk",
+    "Sorry, too many images": "Tyvärr har detta hjul för många bilder för att kunna bli delat. Ta bort några bilder och försök igen.",
+    "They should be able to spin the wheel and": "De ska kunna snurra hjulet och redigera sin egen kopia av hjulet",
+    "They should only be able to spin the wheel": "De ska bara kunna snurra hjulet",
+    "This link will work for anyone": "Den här länken fungerar för alla och du kan dela ut den via e-post, online, på sociala medier etc.",
+    "What should a person be able to do": "Vad ska en person kunna göra när de använder din delade länk?"
+  },
+  "sheetdialog": {
+    "Column": "Kolumn",
+    "First row": "Första raden",
+    "Google sign-in": "Google-inloggning",
+    "Is a header and should not be imported": "Är en rubrik och ska inte importeras",
+    "Link sheet": "Länka kalkylark",
+    "Select a column": "Välj en kolumn",
+    "Select a tab": "Välj en flik",
+    "Selected spreadsheet": "Valt kalkylark",
+    "Tab": "Flik",
+    "To import sheets": "För att importera kalkylark måste du logga in på ditt Google-konto. Varför? Google behöver veta vem du är, så att de kan låta dig välja ett av dina kalkylark.",
+    "When you link a spreadsheet": "När du länkar till ett kalkylark, kommer hjulet att ha samma information som kalkylarket. Om raderar, lägger till eller tar bort i kalkylarket, kommer de automatiskt att läggas till eller tas bort på hjulet. Anslutningen stängs efter en timme.",
+    "added": "{entry} tillagd",
+    "entries added": "{count} namn har lagts till"
+  },
+  "sounds": {
+    "Applause": "Applåder",
+    "Bell ringing": "Klocka ringer",
+    "Cheerful music": "Glad musik",
+    "Cymbals": "Cymbaler",
+    "Dramatic music": "Dramatisk musik",
+    "Fanfare": "Fanfar",
+    "No sound": "Inget ljud",
+    "Piano music": "Pianomusik",
+    "Read out the winning name": "Läs upp det vinnande namnet",
+    "Ticking sound": "Tickande ljud"
+  },
+  "spinningwheel": {
+    "Click to spin": "Klicka för att snurra",
+    "Tap to spin": "Klicka för att snurra",
+    "or press ctrl+enter": "eller tryck ctrl+enter"
+  },
+  "textboxbuttons": {
+    "Add image": "Lägg till bild",
+    "Shuffle": "Blanda",
+    "Sort": "Sortera"
+  },
+  "toolbar": {
+    "Exit fullscreen": "Gå ur fullskärmsläge",
+    "Licenses": "Licenser",
+    "Fullscreen": "Fullskärm",
+    "Language": "Språk",
+    "More": "Mer",
+    "New": "Nytt",
+    "Offline mode": "Offlineläge",
+    "Share": "Dela",
+    "Unlink Google Spreadsheet": "Koppla bort Google-kalkylark"
+  },
+  "twitterdialog": {
+    "Found Twitter users": "Hittade {userCount} Twitter-användare som har twittrat om \"{term}\" nyligen",
+    "Hashtag, like #gdg": "Hashtag, t ex #gdg",
+    "This search will fetch": "Denna sökning kommer att hämta användare som nyligen har twittrat med den hashtag du skev in tidigare. De 600 nyaste tweeten som inte är äldre än 24 timmar tas med. Twitter-användarnamn startar med \"@\". "
+  },
+  "winnerdialog": {
+    "Remove": "Ta bort",
+    "Remove all instances": "Ta bort alla"
+  }
+}
