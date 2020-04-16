@@ -85,6 +85,14 @@ just click through to finish the setup.
 
 ### Install Node modules ###
 
+1. At the command prompt, run
+    ```
+        npm install -g firebase-tools
+    ```
+1. At the command prompt, run
+    ```
+        firebase login
+    ```
 1. At the command prompt in the top-level directory, run
     ```
         npm install
