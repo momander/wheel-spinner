@@ -33,6 +33,7 @@ exports.list = {
   },
   'Brands': {
     'Asana': ['#3be8b0', '#1aafd0', '#6a67ce', '#ffb900', '#fc636b'],
+    'Auto Trader': ['#ff4336','#313c53'],
     'Baidu': ['#de0f17', '#2529d8'],
     'Barclays': ['#00aeef', '#00395d'],
     'Booking.com': ['#003580', '#009fe3', '#feba02', '#666666', '#f2f6fa'],
