@@ -33,7 +33,7 @@ X is the project name, so choose your project name wisely.
 ### B. Create a Firebase project ###
 
 1. Go to https://console.firebase.google.com.
-1. Click *Add project*.
+1. Click *Create a project*.
 1. When you are asked to enter your project name, pick the Google Cloud Platform
 project you created in the previous section.
 1. When asked, pick whatever billing plan works best for you.
@@ -54,7 +54,8 @@ just click through to finish the setup.
 
 ### D. Set up Firebase Authentication for Google ###
 
-1. Select your newly created Firebase project, and then click *Authentication* in the left-hand navigation bar.
+1. Select your newly created Firebase project, then click *Develop* followed by
+*Authentication* in the left-hand navigation bar.
 1. Click *Set up sign-in method*.
 1. Click *Google* in the list.
 1. Click the slider in the upper right-hand corner to enable Google sign-in.
@@ -63,8 +64,9 @@ just click through to finish the setup.
 
 ### E. Create a Firestore database ###
 
-1. Select your newly created Firebase project, and then click *Database* in the left-hand navigation bar.
-1. Pick the option that lets you create a new *Firestore* database (not *Realtime* database).
+1. Select your newly created Firebase project, and then click *Database* in the
+left-hand navigation bar.
+1. Click *Create database*.
 1. Pick the option to start in *Production* mode.
 1. Pick a database location that is close to the majority of your users.
 
@@ -74,7 +76,7 @@ just click through to finish the setup.
 ### Modify .firebaserc ###
 
 1. Open the file *.firebaserc*, or create it if it doesn't exist.
-1. Modify it to look like this (where Z is the name of your test project, for example *mywheel-test*):
+1. Modify it to look like this (where Z is the id of your test project, for example *mywheel-test* or *serene-screwdriver-2341*):
 ```
     {
       "projects": {
@@ -131,10 +133,10 @@ just click through to finish the setup.
       project. Click the cogwheel next to *Project overview*. Copy the value of
       the *Web API Key*.
     * FIREBASE_AUTH_DOMAIN: Enter *Z.firebaseapp.com*
-      where Z is the name of your test project. For example *mywheel-test*.
+      where Z is the id of your test project. For example *mywheel-test*.
     * FIREBASE_DATABASE_URL: Enter *https://Z.firebaseio.com*
-      where Z is the name of your test project. For example *https://mywheel-test.firebaseio.com*.
-    * FIREBASE_PROJECT_ID: Enter the name of your test project. For example:
+      where Z is the id of your test project. For example *https://mywheel-test.firebaseio.com*.
+    * FIREBASE_PROJECT_ID: Enter the id of your test project. For example:
       *mywheel-test*.
     * OAUTH_CLIENT_ID: Go to *console.cloud.google.com* and select your project.
       Click the navigation menu in the upper right-hand corner of the page.
@@ -205,8 +207,8 @@ your project names.
 ```
     {
       "projects": {
-        "prod": "[name of your production project]",
-        "test": "[name of your test project]"
+        "prod": "[id of your production project]",
+        "test": "[id of your test project]"
       }
     }
 ```
@@ -231,10 +233,10 @@ your project names.
       **production** project. Click the cogwheel next to *Project overview*. Copy the value of
       the *Web API Key*.
     * FIREBASE_AUTH_DOMAIN: Enter *Z.firebaseapp.com*
-      where Z is the name of your **production** project. For example *mywheel*.
+      where Z is the id of your **production** project. For example *mywheel*.
     * FIREBASE_DATABASE_URL: Enter *https://Z.firebaseio.com*
-      where Z is the name of your **production** project. For example *https://mywheel.firebaseio.com*.
-    * FIREBASE_PROJECT_ID: Enter the name of your **production** project. For example:
+      where Z is the id of your **production** project. For example *https://mywheel.firebaseio.com*.
+    * FIREBASE_PROJECT_ID: Enter the id of your **production** project. For example:
       *mywheel*.
     * OAUTH_CLIENT_ID: Go to *console.cloud.google.com* and select your **production** project.
       Click the navigation menu in the upper right-hand corner of the page.
