@@ -139,11 +139,11 @@ module.exports = {
       filename: './view-account.html',
       chunks: ['view_account', 'vendor']
     }),
-    new CopyWebpackPlugin([
+    new CopyWebpackPlugin({patterns: [
       { from: './static/manifest.json', to: '.' },
       { from: './static/images/favicon.ico', to: '.' },
       { from: './static/404.html', to: '.' },
-    ]),
+    ]}),
     new GenerateSW({
       exclude: [
         /\.map$/, /\.png$/, /\.mp3$/, /\.xml$/, /\.ico$/,
