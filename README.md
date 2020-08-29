@@ -64,8 +64,8 @@ just click through to finish the setup.
 
 ### E. Create a Firestore database ###
 
-1. Select your newly created Firebase project, and then click *Database* in the
-left-hand navigation bar.
+1. Select your newly created Firebase project, and then click *Cloud Firestore*
+in the left-hand navigation bar.
 1. Click *Create database*.
 1. Pick the option to start in *Production* mode.
 1. Pick a database location that is close to the majority of your users.
@@ -239,12 +239,12 @@ your project names.
     * FIREBASE_PROJECT_ID: Enter the id of your **production** project. For example:
       *mywheel*.
     * OAUTH_CLIENT_ID: Go to *console.cloud.google.com* and select your **production** project.
-      Click the navigation menu in the upper right-hand corner of the page.
+      Click the navigation menu in the upper left-hand corner of the page.
       Select *APIs & Services* and then *Credentials*. Under *OAuth 2.0 Client IDs*,
       copy the *Client ID* for the auto-generated web client. It should end with
       *apps.googleusercontent.com*.
     * GCP_APP_ID: Go to *console.cloud.google.com* and select your **production** project.
-      Click the navigation menu in the upper right-hand corner of the page.
+      Click the navigation menu in the upper left-hand corner of the page.
       Select Home. Under *Project info*, copy the *Project number*. For example:
       *64967613275*.
 
