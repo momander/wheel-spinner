@@ -15,23 +15,36 @@ limitations under the License.
 */
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const SharedWheelService = require('./SharedWheelService.js');
 const express = require('express');
 const cors = require('cors');
 const app = express();
 app.use(cors({ origin: true }));
 
+const db = admin.firestore();
+
 app.get('/:path', async (req, res) => {
   try {
-    const result = await SharedWheelService.get2(
-      admin.firestore(),
-      admin.firestore.FieldValue.serverTimestamp(),
-      req.params.path
-    );
-    res.json({wheelConfig: result});
+    const doc = await db.collection("shared-wheels").doc(req.params.path).get();
+    if (doc.exists) {
+      logReviewStatus(doc.data().reviewStatus);
+      res.status(200).json({wheelConfig: {
+        wheelConfig: doc.data().config,
+        editable: doc.data().editable,
+        reviewStatus: doc.data().reviewStatus
+      }});
+    }
+    else {
+      console.log(`Wheel "${req.params.path}" not found`);
+      res.status(404).json({wheelConfig: {wheelNotFound: true}});
+    }
   }
   catch(ex) {
-    res.status(500).json({error: ex});
+    console.error(ex);
+    res.status(500).json({error: ex.toString()});
   }
 });
 exports.func = () => functions.https.onRequest(app);
+
+function logReviewStatus(reviewStatus) {
+  console.log(`getSharedWheel2 serving a wheel with status "${reviewStatus}"`);
+}

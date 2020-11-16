@@ -21,6 +21,7 @@ export default function Wheel() {
   this.angle = 0;
   this.speed = 0.005;
   this.stopSpeed = 0.0001;
+  this.acceleration = 0.01;
   this.deceleration = 0;
   this.nameLastTick = '';
   this.state = new NotSpunState();
@@ -40,12 +41,14 @@ export default function Wheel() {
     this.wheelPainter.refresh();
   }
 
-  this.configure = function(colors, centerImage, spinTime, hubSize) {
+  this.configure = function(colors, centerImage, spinTime, slowSpin, hubSize, pageBackgroundColor) {
     if (this.state.editAllowed()) {
       this.colors = colors;
       this.centerImage = centerImage;
       this.spinTime = spinTime;
+      this.acceleration = (slowSpin ? 0.001 : 0.01);
       this.hubSize = hubSize;
+      this.pageBackgroundColor = pageBackgroundColor;
       this.wheelPainter.refresh();
     }
   }
@@ -107,8 +110,12 @@ export default function Wheel() {
 
   this.calculateDeceleration = function() {
     var decelTicks = (this.spinTime - 1) * 60;
-    var startSpeed = 0.6;
+    var startSpeed = 60 * this.acceleration;
     this.deceleration = Math.exp(Math.log(this.stopSpeed/startSpeed)/decelTicks);
+  }
+
+  this.accelerate = function() {
+    this.speed += this.acceleration;
   }
 
   this.decelerate = function() {
@@ -121,7 +128,8 @@ export default function Wheel() {
 
   this.draw = function(context) {
     this.wheelPainter.draw(context, this.angle, this.namePicker.getDisplayNames(),
-                          this.colors, this.centerImage, this.hubSize);
+                          this.colors, this.centerImage, this.hubSize,
+                          this.pageBackgroundColor);
   }
 
 }
@@ -156,7 +164,7 @@ function AcceleratingState() {
   this.MAX_AGE = 60;
 
   this.tick = function(wheel) {
-    wheel.speed += 0.01;
+    wheel.accelerate();
     wheel.advance();
     this.ticks += 1;
     if (this.ticks > this.MAX_AGE) {

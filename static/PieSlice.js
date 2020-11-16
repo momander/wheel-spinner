@@ -26,6 +26,7 @@ export default function PieSlice(radians, wheelRadius, hubRadius, color, display
   this.image = image;
 
   this.draw = function(context) {
+    if (!this.displayText && !this.image) return;
     context.save();
     let bgColor = this.color;
     drawBackColor(context, this.wheelRadius, this.radians, bgColor);

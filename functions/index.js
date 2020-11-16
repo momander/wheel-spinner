@@ -18,7 +18,16 @@ admin.initializeApp();
 
 exports.createSharedWheel2 = require('./createSharedWheel2.js').func();
 exports.getSharedWheel2 = require('./getSharedWheel2.js').func();
+exports.logSharedWheelRead = require('./logSharedWheelRead.js').func();
+exports.processSharedWheelReads = require('./processSharedWheelReads.js').func();
 exports.getTwitterUserNames2 = require('./getTwitterUserNames2.js').func();
+exports.convertAccount = require('./convertAccount.js').func();
 exports.deleteInactiveAccounts = require('./deleteInactiveAccounts.js').func();
 exports.deleteUnusedSharedWheels = require('./deleteUnusedSharedWheels.js').func();
 exports.deleteUsedSharedWheels = require('./deleteUsedSharedWheels.js').func();
+exports.deleteOldWheelsFromReviewQueue = require('./deleteOldWheelsFromReviewQueue.js').func();
+exports.getNumberOfWheelsInReviewQueue = require('./getNumberOfWheelsInReviewQueue.js').func();
+exports.translate = require('./translate.js').func();
+exports.tagSuspiciousSharedWheels = require('./tagSuspiciousSharedWheels.js').func();
+exports.backupFirestore = require('./backupFirestore.js').func();
+exports.loadBigQuery = require('./loadBigQuery.js').func();

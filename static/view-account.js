@@ -20,6 +20,7 @@ Vue.use(Buefy);
 import 'buefy/dist/buefy.css';
 
 import './images/favicon.png';
+import './images/icon_57.png';
 import './images/icon_192.png';
 
 import simpletoolbar from './simpletoolbar.vue';

@@ -1,28 +1,43 @@
 {
   "app": {
-    "Free and easy to use": "Free and easy to use. Make your entries, spin wheel to pick a random winner. Customize look and feel, save and share wheels.",
+    "Ads": "Ads",
+    "Click here to report an inappropriate ad": "Click here to report an inappropriate ad.",
     "Click the Language menu": "Click the Language menu in the upper right to switch to English",
+    "Close ad": "Close ad",
     "Create your own": "Create your own",
-    "Make your entries here": "Make your entries here",
+    "Enter names here": "Enter names here",
     "Error": "Error",
-    "Loaded default entries and options": "Loaded default entries and options",
-    "Random picker": "Random picker",
+    "Free and easy to use": "Free and easy to use. Used by teachers and for raffles. Enter names and spin the wheel to pick a random winner. Customize look and feel, save and share wheels.",
+    "Loaded default names and options": "Loaded default names and options",
+    "Random name picker": "Random name picker",
     "Removed": "Removed {name}",
-    "authError": "That didn't work. Please try again and you will be prompted to sign in. ({error})"
+    "We try to display only legitimate and honest ads": "We try to display only legitimate and honest ads.",
+    "authError": "That didn't work. Please try again and you will be prompted to sign in. If it still doesn't work, try these things: refresh the page with Ctrl+Shift+R (Windows, Linux, Chromebook) or Command+Shift+R (Mac), turn off your ad-blocker, turn off your anti-virus software. <br><br>({error})"
   },
   "appInfo": {
     "The entries you make": "The entries you make above will be displayed on the wheel. When you click the wheel, it spins and picks a random winner. You can customize the appearance and behavior of the wheel, and save and share wheels with others.",
-    "Version": "Version"
+    "Did you know": "Did you know that you can change the color, sound, and behavior of the wheel by clicking Customize at the top of this page?",
+    "Dinner wheel": "Dinner wheel",
+    "Examples:": "Examples:",
+    "Is it truly random?": "Is it truly random?",
+    "Terms of service": "Terms of service",
+    "The names you enter": "The names you enter above will be displayed on the wheel. When you click the wheel, it spins and picks a random winner. You can customize the appearance and behavior of the wheel, and save and share wheels with others.",
+    "Version": "Version",
+    "When I was a boy": "\"When I was a boy and I would see scary things in the news, my mother would say to me, 'Look for the helpers. You will always find people who are helping.' ”",
+    "Yes/No/Maybe": "Yes/No/Maybe"
   },
   "common": {
     "Cancel": "Cancel",
     "Close": "Close",
+    "Customize": "Customize",
     "Delete": "Delete",
+    "Entries": "{entryCount} entries",
     "Import Twitter users": "Import Twitter users",
     "Link Google Spreadsheet": "Link Google Spreadsheet",
     "OK": "OK",
     "Open": "Open",
-    "Options": "Options",
+    "Privacy policy": "Privacy policy",
+    "Report offensive content": "Report offensive content",
     "Save": "Save",
     "We have a winner!": "We have a winner!"
   },
@@ -35,10 +50,12 @@
   },
   "optionsdialog": {
     "After spin": "After spin",
+    "All names in the text-box": "All names in the text-box have the same chance of winning, regardless of this value.",
     "Allow duplicates on wheel": "Allow duplicates on wheel",
     "Animate winning entry": "Animate winning entry",
     "Apply a theme": "Apply a theme",
     "Auto-remove winner after 5 seconds": "Auto-remove winner after 5 seconds",
+    "Background color": "Background color",
     "Colors": "Colors",
     "Custom": "Custom",
     "Customize colors": "Customize colors",
@@ -49,7 +66,7 @@
     "Image in the center of the wheel": "Image in the center of the wheel",
     "Image size": "Image size",
     "Launch confetti": "Launch confetti",
-    "Max entries on wheel": "Max entries on wheel",
+    "Max names on wheel": "Max number of names visible on the wheel",
     "No": "No",
     "None": "None",
     "Pick category": "Pick category",
@@ -57,6 +74,7 @@
     "Play click sound when the winner is removed": "Play a click sound when the winner is removed",
     "Select a gallery picture": "Select a gallery picture",
     "Sound": "Sound",
+    "Spin slowly": "Spin slowly",
     "Spin time (seconds)": "Spin time (seconds)",
     "Upload image": "Upload image",
     "Yes": "Yes",
@@ -91,6 +109,7 @@
     "They should be able to spin the wheel and": "They should be able to spin the wheel and edit their own copy of the wheel",
     "They should only be able to spin the wheel": "They should only be able to spin the wheel",
     "This link will work for anyone": "This link will work for anyone and you can share it by email, website, social media, etc.",
+    "We want this website to be safe place for everyone": "We want this website to be a safe place for everyone. Wheels that aren't family-friendly and that violate the terms of service will be deleted.",
     "What should a person be able to do": "What should a person be able to do when they use your shared link?"
   },
   "sheetdialog": {
@@ -109,15 +128,29 @@
     "entries added": "{count} entries added"
   },
   "sounds": {
-    "Applause": "Applause",
+    "Alarm clock": "Alarm clock",
+    "Applause": "Loud applause",
     "Bell ringing": "Bell ringing",
     "Cheerful music": "Cheerful music",
+    "Christmas music": "Christmas music",
+    "Circus music": "Circus music",
     "Cymbals": "Cymbals",
+    "Disco music": "Disco music",
     "Dramatic music": "Dramatic music",
+    "Electronic dance music": "Electronic dance music",
     "Fanfare": "Fanfare",
+    "Fast piano music": "Fast piano music",
+    "Funk music": "Funk music",
+    "Irish folk music": "Irish folk music",
     "No sound": "No sound",
+    "Old phone ringing": "Old phone ringing",
     "Piano music": "Piano music",
     "Read out the winning name": "Read out the winning name",
+    "Reggae music": "Reggae music",
+    "Rock music": "Rock music",
+    "Ska music": "Ska music",
+    "Spooky music": "Spooky music",
+    "Subdued applause": "Subdued applause",
     "Ticking sound": "Ticking sound"
   },
   "spinningwheel": {
@@ -131,20 +164,26 @@
     "Sort": "Sort"
   },
   "toolbar": {
+    "Add your language": "Add your language",
+    "Dark mode": "Dark mode",
     "Exit fullscreen": "Exit fullscreen",
-    "Licenses": "Licenses",
+    "FAQ": "FAQ",
+    "Feedback": "Feedback",
     "Fullscreen": "Fullscreen",
     "Language": "Language",
     "More": "More",
     "New": "New",
     "Offline mode": "Offline mode",
+    "Please enter your email address": "Please enter your email address to continue",
+    "Send debug data": "Send debug data",
     "Share": "Share",
-    "Unlink Google Spreadsheet": "Unlink Google Spreadsheet"
+    "Unlink Google Spreadsheet": "Unlink Google Spreadsheet",
+    "Your session is now being recorded": "Your session is now being recorded. You can stop the recording by closing your browser window."
   },
   "twitterdialog": {
     "Found Twitter users": "Found {userCount} Twitter users who have tweeted about \"{term}\" recently",
-    "Hashtag, like #gdg": "Hashtag, like #gdg",
-    "This search will fetch": "This search will fetch the users who have posted recently on Twitter mentioning the hashtag you enter above. The most recent 600 tweets are considered and no tweet older than 24 hours is included. Twitter user names will start with \"@\"."
+    "Hashtag, like #gdg": "Search query",
+    "This search will fetch": "This search will fetch the users who have posted recently on Twitter.\n<br><br>\n<table class=\"table can-go-dark\">\n  <tr>\n    <th>\n      If you want these users...\n    </th>\n    <th>\n      ...enter this search query\n    </th>\n  </tr>\n  <tr>\n    <td>\n      Users who recently tweeted using the tag #abc\n    </td>\n    <td>\n      <tt>#abc</tt>\n    </td>\n  </tr>\n  <tr>\n    <td>\n      Users who recently posted a tweet containing the text \"kittens\"\n    </td>\n    <td>\n      <tt>kittens</tt>\n    </td>\n  </tr>\n  <tr>\n    <td>\n      Users who recently retweeted tweets from @nytopinion\n    </td>\n    <td>\n      <tt>@nytopinion filter:nativeretweets</tt>\n    </td>\n  </tr>\n  <tr>\n    <td>\n      Users who recently retweeted tweets from @nytopinion that contain the text \"1619\"\n    </td>\n    <td>\n      <tt>@nytopinion filter:nativeretweets 1619</tt>\n    </td>\n  </tr>\n</table>\n<br>\nThe most recent 600 tweets are considered and no tweet older than 24 hours is included. Twitter user names will start with \"@\"."
   },
   "winnerdialog": {
     "Remove": "Remove",

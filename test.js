@@ -483,4 +483,61 @@ describe('Util', function() {
       assert.deepEqual([], Util.getAddedEntries(['A', 'B'], undefined));
     })
   })
+  describe('#sortWheelEntries()', function() {
+    it('should sort strings', function() {
+      const entries = ['E', 'A', 'b', 'C', 'Z'];
+      const sortedEntries = Util.sortWheelEntries(entries);
+      assert.deepStrictEqual(['A', 'b', 'C', 'E', 'Z'], sortedEntries);
+    })
+    it('should sort integers', function() {
+      const entries = ['5', '1', '10', '20', '7'];
+      const sortedEntries = Util.sortWheelEntries(entries);
+      assert.deepStrictEqual(['1', '5', '7', '10', '20'], sortedEntries);
+    })
+    it('should sort floats', function() {
+      const entries = ['5', '1.03', '10.34', '20', '1000.1', '7.0'];
+      const sortedEntries = Util.sortWheelEntries(entries);
+      assert.deepStrictEqual(['1.03', '5', '7.0', '10.34', '20', '1000.1'], sortedEntries);
+    })
+    it('should sort numbered entries', function() {
+      const entries = ['5. Fifth', '1. First', '10. Tenth'];
+      const sortedEntries = Util.sortWheelEntries(entries);
+      assert.deepStrictEqual(['1. First', '5. Fifth', '10. Tenth'], sortedEntries);
+    })
+    it('should sort mixed entries', function() {
+      const entries = ['d', '5', '1', 'A'];
+      const sortedEntries = Util.sortWheelEntries(entries);
+      assert.deepStrictEqual(['1', '5', 'A', 'd'], sortedEntries);
+    })
+  })
+  describe('#extractDisplayText()', function() {
+    it('should behave when sent nothing', function() {
+      assert.strictEqual(Util.extractDisplayText('', true), '');
+      assert.strictEqual(Util.extractDisplayText(undefined, true), '');
+    })
+    it('should do nothing with a short entry', function() {
+      assert.strictEqual(Util.extractDisplayText('Martin', true), ' Martin ');
+    })
+    it('should shorten a long entry', function() {
+      const expected = ' Stockholm Syndrom… ';
+      const actual = Util.extractDisplayText('Stockholm Syndromes', true);
+      assert.strictEqual(actual, expected);
+    })
+    it('should not shorten a long entry if not asked to', function() {
+      const expected = ' Stockholm Syndromes ';
+      const actual = Util.extractDisplayText('Stockholm Syndromes', false);
+      assert.strictEqual(actual, expected);
+    })
+    it('should remove image', function() {
+      const expected = ' Captain Rodney is… ';
+      const imgEntry = '<img src="data:image/jpeg;base64,/9j/4AAQ" style="height:25px">Captain Rodney is an excellent drink';
+      const actual = Util.extractDisplayText(imgEntry, true);
+      assert.strictEqual(actual, expected);
+    })
+    it('should decode escape sequences', function() {
+      const expected = ' <<Ron Zacapa>> ';
+      const actual = Util.extractDisplayText('&lt;&lt;Ron Zacapa&gt;&gt;', true);
+      assert.strictEqual(actual, expected);
+    })
+  })
 })

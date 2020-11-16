@@ -17,13 +17,13 @@ limitations under the License.
   <b-modal :active.sync="winnerDialogVisible" :width="640" scroll="keep">
     <div class="modal-card" style="width: auto">
       <header class="modal-card-head">
-        <div class="modal-card-title">
+        <div class="modal-card-title" style="width:100%">
           <h5 class="modal-title">
             {{winnerMessage}}
           </h5>
         </div>
       </header>
-      <section class="modal-card-body">
+      <section class="modal-card-body can-go-dark">
         <h1 class="title">
           <img v-if="winnerImage" :src="winnerImage" style="height:200px;vertical-align:middle">
           <span>{{winnerText}}</span>
@@ -33,10 +33,10 @@ limitations under the License.
         <b-button size="is-medium" @click="winnerDialogVisible=false">
           {{ $t('common.Close') }}
         </b-button>
-        <b-button size="is-medium" type="is-info" ref="removeButton" @click="removeWinner">
+        <b-button size="is-medium" v-show="showRemoveButton" type="is-info" ref="removeButton" @click="removeWinner">
           {{ $t('winnerdialog.Remove') }}
         </b-button>
-        <b-button size="is-medium" v-show="multipleWinnerInstances" type="is-primary" @click="removeWinnerAll">
+        <b-button size="is-medium" v-show="showRemoveAllButton" type="is-primary" @click="removeWinnerAll">
           {{ $t('winnerdialog.Remove all instances') }}
         </b-button>
       </footer>
@@ -58,9 +58,14 @@ limitations under the License.
       winnerMessage() {
         return this.$store.state.wheelConfig.winnerMessage;
       },
-      multipleWinnerInstances() {
+      showRemoveButton() {
+        return !this.$store.state.wheelConfig.autoRemoveWinner;
+      },
+      showRemoveAllButton() {
         const wheelConfig = this.$store.state.wheelConfig;
-        return (Util.getOccurencesInArray(wheelConfig.names, this.winnerEntry) > 1);
+        const winnerInstances = Util.getOccurencesInArray(wheelConfig.names, this.winnerEntry);
+        const autoRemoveWinner = wheelConfig.autoRemoveWinner;
+        return !autoRemoveWinner && winnerInstances > 1;
       }
     },
     methods: {

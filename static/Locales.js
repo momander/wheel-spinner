@@ -68,23 +68,13 @@ export function getLangTipLocale(systemLocale, navigatorLanguages) {
 export function getNamesForAll() {
   return locales
            .map(locale => ({name: locale.name, humanName: locale.humanName}))
-           .sort(byHumanName)
+           .sort((a, b) => a.humanName.localeCompare(b.humanName))
 }
 
 export function getDomainLocale(hostName) {
   return nonEnglishDomains
             .filter(domain => hostName.includes(domain.partialName))
             .reduce((acc, current) => current.locale, 'en');
-}
-
-function byHumanName(a, b) {
-  if (a.humanName < b.humanName){
-    return -1;
-  }
-  if (a.humanName > b.humanName){
-    return 1;
-  }
-  return 0;
 }
 
 function areSameLocale(locale1, locale2) {

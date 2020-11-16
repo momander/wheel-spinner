@@ -1,0 +1,15 @@
+{
+  "name": "tools",
+  "version": "1.0.0",
+  "description": "",
+  "main": "write_training_data.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/bigquery": "^5.2.0"
+  }
+}

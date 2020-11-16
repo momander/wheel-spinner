@@ -33,7 +33,6 @@ exports.list = {
   },
   'Brands': {
     'Asana': ['#3be8b0', '#1aafd0', '#6a67ce', '#ffb900', '#fc636b'],
-    'Auto Trader': ['#ff4336','#313c53'],
     'Baidu': ['#de0f17', '#2529d8'],
     'Barclays': ['#00aeef', '#00395d'],
     'Booking.com': ['#003580', '#009fe3', '#feba02', '#666666', '#f2f6fa'],
@@ -80,6 +79,7 @@ exports.list = {
     'Ryanair': ['#073590', '#f1c933', '#2091eb'],
     'Salesforce': ['#1798c1', '#ff1100'],
     'Slack': ['#6ecadc', '#e9a820', '#e01563', '#3eb991'],
+    'Spotify': ['#1db954', '#ffffff', '#000000'],
     'Stack Exchange': ['#1e5397', '#376db6', '#4ca2da', '#91d8f4'],
     'Staples': ['#cc0000', '#2c8aec', '#ffcc00'],
     'Subway': ['#489e3b', '#fabd42', '#cd0a20'],
@@ -127,9 +127,12 @@ exports.list = {
     'Candyland': ['#fbd7e7', '#eeddec', '#e1e3f1', '#d4e9f6', '#c7effb'],
     'Fortnite': ['#E98F5C', '#B448F0', '#2AC9FA', '#F9E36E', '#C7C9D6'],
     'Mario & Luigi': ['#5a98e1', '#139334', '#cea900', '#fe130f', '#095cd4', '#16b65c'],
+    'Minecraft': ['#477A1E', '#70B237', '#8FCA5C', '#61371F', '#854F2B', '#C28340'],
     'Monopoly': ['#C70000', '#BFDBAE', '#8FBC72', '#FFFFFF', '#D7BAAA'],
     'Overwatch': ['#f99e1a', '#43484c', '#405275', '#218ffe', '#000000'],
-    'Pikachu': ['#FAD61D', '#E19720', '#F62D14', '#811E09', '#000000']
+    'Pikachu': ['#FAD61D', '#E19720', '#F62D14', '#811E09', '#000000'],
+    'Rocket League': ['#008BFF', '#FF8B00'],
+    'The Crew 2': ['#FFDB15', '#FB8018', '#FB1257', '#01CDF9'],
   },
   'Holidays': {
     'Christmas': ['#348228', '#469A47', '#DAF7FF', '#FFFAFA', '#EB2029', '#D70816'],

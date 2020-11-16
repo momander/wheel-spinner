@@ -38,6 +38,7 @@ limitations under the License.
   import * as Util from './Util.js';
   import Ticker from './Ticker.js';
   import CircleType from 'circletype';
+  import * as Locales from './Locales.js';
 
   export default {
     data() {
@@ -59,18 +60,19 @@ limitations under the License.
       names() {
         return this.$store.state.wheelConfig.names;
       },
+      preferences() {
+        return this.$store.state.preferences
+      },
       hasEntries() {
         return (this.$store.state.wheelConfig.names.length>0);
       }
     },
     watch: {
       wheelConfig(newValue, oldValue) {
-        this.myWheel.configure(
-          newValue.getCoalescedColors(),
-          newValue.getWheelImage(),
-          newValue.spinTime,
-          newValue.hubSize
-        );
+        this.configureWheel();
+      },
+      preferences(newValue) {
+        this.configureWheel();
       },
       names(newValue, oldValue) {
         this.myWheel.setNames(newValue, this.wheelConfig.maxNames,
@@ -82,8 +84,7 @@ limitations under the License.
         const side = document.getElementById('wheelCanvas').offsetWidth;
         const fontSize = `${Math.round(side/20)}px`;
         document.getElementById('instructionsLayer').style.fontSize = fontSize;
-        // Don't draw circle text for Arabic. CircleType doesn't support RTL.
-        if (this.$i18n.locale=='ar') return;
+        if (this.cantBeDisplayedInCircleType(this.$i18n.locale)) return;
         const radius = side / 3;
         new CircleType(document.getElementById('topInstruction'))
           .radius(radius);
@@ -91,6 +92,9 @@ limitations under the License.
           new CircleType(document.getElementById('bottomInstruction'))
             .radius(radius).dir(-1);
         }
+      },
+      cantBeDisplayedInCircleType(locale) {
+        return ['ar', 'bn', 'fa', 'gu', 'he', 'hi'].includes(locale);
       },
       startKeyListener() {
         if (!Util.isTouchScreen()) {
@@ -122,10 +126,10 @@ limitations under the License.
         const defaultNames = this.wheelConfig.getDefaultNames();
         if (!Util.arraysEqual(this.names, defaultNames)) {
           const label = this.$store.state.version;
-          ga('send', 'event', 'Wheel', 'SpinWithCustomNames', label);
+          Util.trackEvent('Wheel', 'SpinWithCustomNames', label);
         }
         else {
-          ga('send', 'event', 'Wheel', 'SpinWithDefaultNames', '');
+          Util.trackEvent('Wheel', 'SpinWithDefaultNames', '');
         }
       },
       tick(ms) {
@@ -142,7 +146,18 @@ limitations under the License.
       },
       refresh() {
         this.myWheel.refresh();
-      }
+      },
+      configureWheel() {
+        this.myWheel.configure(
+          this.$store.state.wheelConfig.getCoalescedColors(),
+          this.$store.state.wheelConfig.getWheelImage(),
+          this.$store.state.wheelConfig.spinTime,
+          this.$store.state.wheelConfig.slowSpin,
+          this.$store.state.wheelConfig.hubSize,
+          this.$store.getters.darkMode ? 
+            '#000' : this.$store.state.wheelConfig.pageBackgroundColor
+        );
+      },
     }
   }
 </script>

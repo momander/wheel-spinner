@@ -24,11 +24,10 @@ app.get('/', async (req, res) => {
   const db = admin.firestore();
   let deletions = 0;
   while (true) {
-    const snap = await getAccounts(db, getDaysAgo(180));
-    const emails = getProperty(snap, 'email');
-    await deleteAccountsAndWheels(db, emails);
-    deletions += emails.length;
-    if (emails.length==0 || deletions>900) break;
+    const querySnapshot = await getAccounts(db, getDaysAgo(180));
+    await deleteAccountsAndWheels(db, querySnapshot);
+    deletions += querySnapshot.size;
+    if (querySnapshot.size==0 || deletions>=300) break;
   }
   const msg = `${deletions} accounts deleted`;
   console.log(msg);
@@ -49,28 +48,14 @@ async function getAccounts(db, cutoffDate) {
                  .get();
 }
 
-function getProperty(snap, propertyName) {
-  retVal = [];
-  snap.forEach(function(doc) {
-    if (doc.data()[propertyName]) {
-      retVal.push(doc.data()[propertyName]);
-    }
-    else {
-      console.log(`Did not find "${propertyName}" for ${JSON.stringify(doc.data())}`);
-    }
-  })
-  return retVal;
-}
-
-async function deleteAccountsAndWheels(db, emails) {
-  const batch = db.batch();
-  for (let email of emails) {
-    const snap = await db.collection(`accounts/${email}/wheels`).get();
+async function deleteAccountsAndWheels(db, querySnapshot) {
+  for (let accountDoc of querySnapshot.docs) {
+    const batch = db.batch();
+    const snap = await db.collection(`${accountDoc.ref.path}/wheels`).get();
     snap.forEach(function(doc) {
       batch.delete(doc.ref);
     })
-    const doc = await db.doc(`accounts/${email}`).get();
-    batch.delete(doc.ref);
+    batch.delete(accountDoc.ref);
+    await batch.commit();
   }
-  await batch.commit();
 }

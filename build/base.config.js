@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 const path = require('path');
-const webpack = require('webpack');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -22,12 +21,14 @@ const {GenerateSW} = require('workbox-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 module.exports = {
+  devtool: 'source-map',
   entry: {
     polyfill: '@babel/polyfill',
     index: './static/index.js',
     view: './static/view.js',
     faq: './static/faq.js',
     view_account: './static/view-account.js',
+    admin: './static/admin/index.js',
   },
   output: {
     filename: '[name]-[contenthash].js',
@@ -115,9 +116,8 @@ module.exports = {
     ]
   },
   plugins: [
-    new webpack.HashedModuleIdsPlugin(),
     new MiniCssExtractPlugin({
-      filename: "css/[name]-[contenthash].css",
+      filename: "css/[name].css",
     }),
     new HtmlWebpackPlugin({
       template: './static/index.html',
@@ -139,6 +139,11 @@ module.exports = {
       filename: './view-account.html',
       chunks: ['view_account', 'vendor']
     }),
+    new HtmlWebpackPlugin({
+      template: './static/admin/index.html',
+      filename: './admin.html',
+      chunks: ['admin', 'vendor']
+    }),
     new CopyWebpackPlugin({patterns: [
       { from: './static/manifest.json', to: '.' },
       { from: './static/images/favicon.ico', to: '.' },
@@ -147,7 +152,8 @@ module.exports = {
     new GenerateSW({
       exclude: [
         /\.map$/, /\.png$/, /\.mp3$/, /\.xml$/, /\.ico$/,
-        /faq/, /404/, /vendors~/
+        /faq/, /privacy/, /translate/, /404/, /vendors~/, /^locale/,
+        /admin/, /view/, /index/, /polyfill/, /precache/, /vendor/
       ],
       skipWaiting: true,
       clientsClaim: true,

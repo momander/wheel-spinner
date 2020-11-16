@@ -26,7 +26,10 @@ limitations under the License.
       return { id: '?' }
     },
     mounted() {
-      setTimeout(() => { this.id = ga.getAll()[0].get('clientId') }, 1000)      
+      const self = this;
+      ga(function(tracker) {
+        self.id = tracker.get('clientId');
+      });
     }
   }
 </script>

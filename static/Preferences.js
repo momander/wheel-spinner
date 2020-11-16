@@ -15,6 +15,7 @@ limitations under the License.
 */
 export default function Preferences() {
   this.appInfoVisible = true;
+  this.darkMode = false;
 
   this.loadJson = function(jsonString) {
     let obj = JSON.parse(jsonString);

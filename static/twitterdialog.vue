@@ -21,12 +21,11 @@ limitations under the License.
           <i class="fab fa-twitter"></i>&nbsp;{{ $t('common.Import Twitter users') }}
         </p>
       </header>
-      <section class="modal-card-body">
+      <section class="modal-card-body can-go-dark">
         <b-field>
           <b-input :placeholder="$t('twitterdialog.Hashtag, like #gdg')" v-model="searchTerm" @keyup.native.enter="getTwitterUsers" ref="searchTermField"></b-input>
         </b-field>
-        <p style="color:#999">
-          {{ $t('twitterdialog.This search will fetch') }}
+        <p style="color:#999" v-html="$t('twitterdialog.This search will fetch')">
         </p>
       </section>
       <footer class="modal-card-foot" style="justify-content:flex-end">
@@ -43,6 +42,7 @@ limitations under the License.
 
 <script>
   import * as ServerFunctions from './ServerFunctions.js';
+  import * as Util from './Util.js';
 
   export default {
     data() {
@@ -55,7 +55,7 @@ limitations under the License.
       },
       async getTwitterUsers() {
         this.twitterDialogVisible = false;
-        ga('send', 'event', 'Wheel', 'GetSocialMediaUsers', this.searchTerm);
+        Util.trackEvent('Wheel', 'GetSocialMediaUsers', this.searchTerm);
         try {
           this.$emit('start-wait-animation');
           const users = await ServerFunctions.fetchSocialMediaUsers(this.searchTerm);
@@ -70,6 +70,7 @@ limitations under the License.
           }
         }
         catch (ex) {
+          Util.trackException(ex);
           alert(ex);
         }
         finally {

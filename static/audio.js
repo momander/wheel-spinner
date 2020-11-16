@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import 'howler';
+import * as Util from './Util.js';
 
 import './third_party/soundbible/SMALL_CROWD_APPLAUSE-Yannick_Lemieux-1268806408.mp3';
 import './ding.mp3';
@@ -92,8 +93,24 @@ function playSound(soundName) {
       sounds[soundName] = new Howl({src: [soundName], autoplay: true});
     }
   }
-  catch (e) {
-    // Some old Chrome versions trigger exceptions when calling howler.
-    console.error(e);
+  catch (ex) {
+    Util.trackException(ex);
+  }
+}
+
+export function preloadSounds(duringSpinSound, afterSpinSound) {
+  try {
+    preloadFile(duringSpinSounds.find(sound => sound.value==duringSpinSound).musicFile);
+    if (duringSpinSound == 'ticking-sound') preloadFile('/ding.mp3');
+    preloadFile(afterSpinSounds.find(sound => sound.value==afterSpinSound).file);
+  }
+  catch (ex) {
+    Util.trackException(ex);
+  }
+}
+
+function preloadFile(file) {
+  if (file && !sounds[file]) {
+    sounds[file] = new Howl({src: [file]});
   }
 }

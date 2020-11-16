@@ -1,5 +1,9 @@
+rules_version = "2";
 service cloud.firestore {
 	match /databases/{database}/documents {
+    function isAdminUser() {
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
   	match /accounts/{email} {
     	allow read, write: if request.auth.token.email == email;
     }
@@ -12,5 +16,23 @@ service cloud.firestore {
   	match /accounts/{uid}/{document=**} {
     	allow read, write: if request.auth.uid == uid;
     }
+  	match /admins/{uid} {
+    	allow read, write: if isAdminUser();
+		}
+  	match /admins/{uid}/{document=**} {
+    	allow read, write: if isAdminUser();
+		}
+  	match /settings/{document=**} {
+			allow read, write: if isAdminUser()
+		}
+  	match /shared-wheels/{document=**} {
+			allow read, write: if isAdminUser()
+		}
+  	match /shared-wheels-review-queue/{document=**} {
+			allow read, write: if isAdminUser()
+		}
+  	match /shared-wheels-rejected/{document=**} {
+			allow read, write: if isAdminUser()
+		}
   }
 }

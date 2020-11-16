@@ -20,30 +20,20 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 app.use(cors({ origin: true }));
+const Util = require('./Util.js');
 
 app.get('/:searchTerm', async (req, res) => {
   try {
     const users = await TwitterService.getTwitterUserNames(
-      await getSetting('TWITTER_APP_KEY'),
-      await getSetting('TWITTER_APP_SECRET'),
-      await getSetting('TWITTER_BEARER_TOKEN'),
+      await Util.getSetting('TWITTER_APP_KEY'),
+      await Util.getSetting('TWITTER_APP_SECRET'),
+      await Util.getSetting('TWITTER_BEARER_TOKEN'),
       req.params.searchTerm
     );
     res.json(users);
   }
   catch(ex) {
-    res.status(500).json({error: ex});
+    res.status(500).json({error: ex.toString()});
   }
 });
 exports.func = () => functions.https.onRequest(app);
-
-async function getSetting(key) {
-  let db = admin.firestore();
-  let doc = await db.collection("settings").doc(key).get();
-  if (doc.exists && doc.data().value) {
-    return doc.data().value;
-  }
-  else {
-    throw `Settings key "${key}" not found in database`;
-  }
-}
