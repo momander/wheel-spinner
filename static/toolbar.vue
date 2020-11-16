@@ -38,8 +38,11 @@ limitations under the License.
       <b-navbar-item v-show="shareButtonVisible" href="#" @click="$emit('open-share-dialog')">
         <i class="fa fa-share-alt fa-fw"></i>&nbsp;{{ $t('toolbar.Share') }}
       </b-navbar-item>
-      <b-navbar-item v-show="optionsButtonVisible" href="#" @click="$emit('open-options-dialog')">
-        <i class="fa fa-cog fa-fw"></i>&nbsp;{{ $t('common.Options') }}
+      <b-navbar-item v-show="optionsButtonVisible" href="#" @click="$emit('open-customize-dialog')">
+        <i class="fas fa-palette fa-fw"></i>&nbsp;{{ $t('common.Customize') }}
+      </b-navbar-item>
+      <b-navbar-item v-if="!browserIsIEOrOldEdge" v-show="optionsButtonVisible" href="#" @click="toggleDarkMode()">
+        <i class="fas fa-moon"></i>&nbsp;{{ $t('toolbar.Dark mode') }}
       </b-navbar-item>
       <b-navbar-item v-show="fullscreenButtonVisible" href="#" @click="$store.commit('enterFullScreen')">
         <i class="fa fa-expand fa-fw"></i>&nbsp;{{ $t('toolbar.Fullscreen') }}
@@ -50,6 +53,14 @@ limitations under the License.
       <b-navbar-item v-show="unlinkSheetButtonVisible" href="#" @click="$store.commit('unlinkSheet')">
         <i class="fa fa-unlink fa-fw"></i>&nbsp;{{ $t('toolbar.Unlink Google Spreadsheet') }}
       </b-navbar-item>
+      <b-navbar-dropdown v-show="moreVisible" :label="$t('toolbar.More')" :right="true">
+        <b-navbar-item href="#" v-show="importVisible" @click="$emit('open-twitter-dialog')">
+          <i class="fab fa-twitter fa-fw"></i>&nbsp;{{ $t('common.Import Twitter users') }}
+        </b-navbar-item>
+        <b-navbar-item href="#" v-show="importVisible" @click="$emit('open-sheet-dialog')">
+          <i class="fa fa-link fa-fw"></i>&nbsp;{{ $t('common.Link Google Spreadsheet') }}
+        </b-navbar-item>
+      </b-navbar-dropdown>
       <b-navbar-dropdown v-if="$mq=='mobile'" :label="$t('toolbar.Language')">
         <b-navbar-item href="#" v-for="locale in locales" :key="locale.name"
           @click="$emit('set-locale', locale.name)">
@@ -66,21 +77,6 @@ limitations under the License.
           </option>
         </b-select>
       </b-navbar-item>
-      <template v-if="browserIsIEOrOldEdge">
-      </template>
-      <template v-else>
-        <b-navbar-dropdown v-show="moreVisible" :label="$t('toolbar.More')" :right="true">
-          <b-navbar-item v-show="faqbuttonVisible" href="/faq.html">
-            <i class="fa fa-question-circle fa-fw"></i>&nbsp;{{ $t('toolbar.Licenses') }}
-          </b-navbar-item>
-          <b-navbar-item href="#" v-show="importVisible" @click="$emit('open-twitter-dialog')">
-            <i class="fab fa-twitter fa-fw"></i>&nbsp;{{ $t('common.Import Twitter users') }}
-          </b-navbar-item>
-          <b-navbar-item href="#" v-show="importVisible" @click="$emit('open-sheet-dialog')">
-            <i class="fa fa-link fa-fw"></i>&nbsp;{{ $t('common.Link Google Spreadsheet') }}
-          </b-navbar-item>
-        </b-navbar-dropdown>
-      </template>
     </template>
   </b-navbar>
 </template>
@@ -153,5 +149,11 @@ limitations under the License.
         this.$emit('set-locale', newValue);
       }
     },
+    methods: {
+      toggleDarkMode() {
+        Util.trackEvent('Wheel', 'ToggleDarkMode', '');
+        this.$store.commit('toggleDarkMode');
+      }
+    }
   }
 </script>

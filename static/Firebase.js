@@ -51,7 +51,11 @@ export async function logInToSheets(locale) {
 }
 
 export function logOut() {
-  firebase.auth().signOut();
+  try {
+    firebase.auth().signOut();
+  }
+  catch (ex) {
+  }
 }
 
 export function logUserActivity(uid) {
@@ -61,6 +65,10 @@ export function logUserActivity(uid) {
 
 export async function getWheels(uid) {
   return Firestore.getWheels(firebase.firestore(), uid);
+}
+
+export async function setAdminsWheelsToZero(adminsUid) {
+  return Firestore.setAdminsWheelsToZero(firebase.firestore(), adminsUid);
 }
 
 export async function logWheelRead(uid, wheelTitle) {
@@ -79,6 +87,50 @@ export async function saveWheel(uid, config) {
 
 export async function deleteAccount(uid) {
   await Firestore.deleteAccount(firebase.firestore(), uid);
+}
+
+export async function getDirtyWords() {
+  return await Firestore.getDirtyWords(firebase.firestore());
+}
+
+export async function setDirtyWords(words) {
+  await Firestore.setDirtyWords(firebase.firestore(), words);
+}
+
+export async function deleteAdmin(uid) {
+  await Firestore.deleteAdmin(firebase.firestore(), uid);
+}
+
+export async function addAdmin(uid, name) {
+  await Firestore.addAdmin(firebase.firestore(), uid, name);
+}
+
+export function getDb() {
+  return firebase.firestore();
+}
+
+export async function approveSharedWheel(path, uid) {
+  const increment = firebase.firestore.FieldValue.increment(1);
+  await Firestore.approveSharedWheel(firebase.firestore(), increment, path, uid);
+}
+
+export async function deleteSharedWheel(path, incReviewCount) {
+  const user = await getLoggedInUser();
+  const increment = incReviewCount ? firebase.firestore.FieldValue.increment(1):
+                                     firebase.firestore.FieldValue.increment(0);
+  await Firestore.deleteSharedWheel(firebase.firestore(), increment, path, user.uid);
+}
+
+export async function resetSessionReviews(uid) {
+  await Firestore.resetSessionReviews(firebase.firestore(), uid);
+}
+
+export async function getSharedWheel(path) {
+  return await Firestore.getSharedWheel(firebase.firestore(), path);
+}
+
+export async function getNextSharedWheelForReview() {
+  return await Firestore.getNextSharedWheelForReview(firebase.firestore());
 }
 
 async function importFirebaseLibs() {

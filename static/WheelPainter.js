@@ -29,13 +29,15 @@ export default class WheelPainter {
     this.wheelImages = {};
   }
 
-  draw(context, angle, names, colors, centerImage, hubSize) {
+  draw(context, angle, names, colors, centerImage, hubSize, backgroundColor) {
     const wheelRadius = context.canvas.width * .44;
     const hubRadius = this.getHubRadius(wheelRadius, hubSize);
-    this.drawWheelShadow(context, wheelRadius);
+    const drawShadows = Util.colorIsWhite(backgroundColor);
+    this.drawBackgroundColor(context, backgroundColor);
+    this.drawWheelShadow(context, wheelRadius, drawShadows);
     if (names.includes('')) this.drawHat(context, wheelRadius, hubRadius);
     this.drawWheel(context, wheelRadius, angle, names, colors, hubRadius);
-    this.drawPointer(context, wheelRadius);
+    this.drawPointer(context, wheelRadius, drawShadows);
     this.drawHub(context, angle, centerImage, hubRadius);
   }
 
@@ -46,9 +48,19 @@ export default class WheelPainter {
 
   refresh() {
     this.wheelImage = null;
+    this.pointerImage = null;
   }
 
-  drawWheelShadow(context, wheelRadius) {
+  drawBackgroundColor(context, backgroundColor) {
+    if (backgroundColor=='#FFFFFF') return;
+    context.save();
+    context.fillStyle = backgroundColor;
+    context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+    context.restore();
+  }
+
+  drawWheelShadow(context, wheelRadius, drawShadows) {
+    if (!drawShadows) return;
     if (!this.wheelShadowImage) {
       this.wheelShadowImage = ImageUtil.createInMemoryImage(context.canvas.width, context.canvas.height);
       this.drawWheelShadowNoCache(this.wheelShadowImage.getContext("2d"), wheelRadius);
@@ -82,10 +94,10 @@ export default class WheelPainter {
     context.drawImage(image, x, y, width, height);
   }
 
-  drawPointer(context, wheelRadius) {
+  drawPointer(context, wheelRadius, drawShadows) {
     if (!this.pointerImage) {
       this.pointerImage = ImageUtil.createInMemoryImage(context.canvas.width, context.canvas.height);
-      this.drawPointerNoCache(this.pointerImage.getContext("2d"), wheelRadius);
+      this.drawPointerNoCache(this.pointerImage.getContext("2d"), wheelRadius, drawShadows);
     }
     context.drawImage(this.pointerImage, 0, 0);
   }
@@ -149,12 +161,14 @@ export default class WheelPainter {
     context.stroke();
   }
 
-  drawPointerNoCache(context, wheelRadius) {
+  drawPointerNoCache(context, wheelRadius, drawShadows) {
     context.save();
     context.translate(context.canvas.width / 2, context.canvas.height / 2);
-    context.shadowColor = '#444';
-    context.shadowOffsetY = 8;
-    context.shadowBlur = 20;
+    if (drawShadows) {
+      context.shadowColor = '#444';
+      context.shadowOffsetY = 4;
+      context.shadowBlur = 10;
+    }
     context.beginPath();
     context.moveTo(wheelRadius - 15, 0);
     context.lineTo(wheelRadius + 25, -20);

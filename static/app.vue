@@ -22,13 +22,15 @@ limitations under the License.
       v-on:open-open-dialog="openOpenDialog()"
       v-on:open-save-dialog="openSaveDialog()"
       v-on:open-share-dialog="openShareDialog()"
-      v-on:open-options-dialog="openOptionsDialog()"
+      v-on:open-customize-dialog="openCustomizeDialog()"
       v-on:open-twitter-dialog="openTwitterDialog()"
       v-on:open-sheet-dialog="openSheetDialog()"
       v-on:set-locale="setLocale"
     ></toolbar>
     <section class="section" style="padding-top:1rem; padding-bottom:0">
-      <div class="columns is-centered">
+      <div class="columns" v-bind:class="{ 'is-centered': $store.state.appStatus.fullScreen }">
+        <div class="column is-3" v-show="!$store.state.appStatus.fullScreen">
+        </div>
         <div class="column is-6" v-bind:class="{ 'is-7': $store.state.appStatus.fullScreen }">
           <spinningwheel ref="spinningwheel"
             v-on:wheel-started="wheelStarted"
@@ -38,11 +40,12 @@ limitations under the License.
         </div>
         <div class="column is-3" v-show="!$store.state.appStatus.fullScreen">
           <span style="font-family:Quicksand">
-            {{ $t('app.Make your entries here') }}
+            {{ $t('app.Enter names here') }}
           </span>
           <br/>
           <textboxbuttons></textboxbuttons>
           <textbox></textbox>
+          <entry-counter></entry-counter>
           <app-info
             v-on:open-options-dialog="openOptionsDialog()"
           ></app-info>
@@ -111,6 +114,7 @@ limitations under the License.
   import sheetdialog from './sheetdialog.vue';
   import winnerdialog from './winnerdialog.vue';
   import winneranimation from './winneranimation.vue';
+  import entryCounter from './entry-counter.vue';
   import * as ConfettiLauncher from './ConfettiLauncher.js';
   import * as Util from './Util.js';
   import * as FullScreen from './FullScreen.js';
@@ -126,7 +130,7 @@ limitations under the License.
     components: {
       loadingScreen, toolbar, textboxbuttons, textbox, spinningwheel, appInfo,
       opendialog, winnerdialog, savedialog, optionsdialog, sharedialog,
-      twitterdialog, sheetdialog, winneranimation
+      twitterdialog, sheetdialog, winneranimation, entryCounter
     },
     async mounted() {
       let result = '';
@@ -134,6 +138,7 @@ limitations under the License.
         result = await WheelConfigLoader.load(window.location);
       }
       catch(ex) {
+        Util.trackException(ex);
         alert(ex);
       }
       if (result.redirectUrl) {
@@ -142,7 +147,10 @@ limitations under the License.
       else {
         const wheelConfig = new WheelConfig(this.$t('common.We have a winner!'));
         wheelConfig.loadJson(localStorage.getItem('LastWheelConfig'));
-        if (result.wheelConfig) wheelConfig.loadValues(result.wheelConfig);
+        if (result.wheelConfig) {
+          wheelConfig.loadValues(result.wheelConfig);
+          ServerFunctions.logSharedWheelRead(result.sharedWheelPath);
+        }
         this.$store.commit('setWheelConfig', wheelConfig);
         this.setDocLangProperties();
         this.loadPreferences();
@@ -172,25 +180,34 @@ limitations under the License.
       },
       wheelSpinning() {
         return this.$store.state.appStatus.wheelSpinning
+      },
+      darkMode() {
+        return this.$store.getters.darkMode
+      },
+      pageColor() {
+        return this.$store.state.wheelConfig.pageBackgroundColor
       }
     },
     watch: {
       wheelConfig(newValue, oldValue) {
+        Util.updateColorStyles(this.darkMode, '#777', this.pageColor);
         localStorage.setItem('LastWheelConfig', this.$store.state.wheelConfig.getJson());
+        Audio.preloadSounds(newValue.duringSpinSound, newValue.afterSpinSound);
       },
       names(newValue, oldValue) {
         localStorage.setItem('LastWheelConfig', this.$store.state.wheelConfig.getJson());
       },
       preferences(newValue) {
+        Util.updateColorStyles(this.darkMode, '#777', this.pageColor);
         localStorage.setItem('Preferences', newValue.getJson());
       },
       fullScreen(newValue, oldValue) {
         if (newValue) {
-          ga('send', 'event', 'Wheel', 'EnterFullscreen', '');
+          Util.trackEvent('Wheel', 'EnterFullscreen', '');
           FullScreen.turnOnFullscreen();
         }
         if (!newValue) {
-          ga('send', 'event', 'Wheel', 'ExitFullscreen', '');
+          Util.trackEvent('Wheel', 'ExitFullscreen', '');
           FullScreen.turnOffFullscreen();
         }
       },
@@ -244,7 +261,7 @@ limitations under the License.
       },
       setDocLangProperties() {
         document.documentElement.setAttribute('lang', this.$i18n.locale);
-        document.title = 'Wheel-spinner | ' + this.$t('app.Random picker');
+        document.title = 'Wheel-spinner | ' + this.$t('app.Random name picker');
         const desc = this.$t('app.Free and easy to use');
         document.querySelector('meta[name="description"]').setAttribute("content", desc);
       },
@@ -259,30 +276,30 @@ limitations under the License.
       resetWheel() {
         const wheelConfig = new WheelConfig(this.$t('common.We have a winner!'));
         this.$store.commit('setWheelConfig', wheelConfig);
-        this.showSnackbarMessage(this.$t('app.Loaded default entries and options'));
+        this.showSnackbarMessage(this.$t('app.Loaded default names and options'));
       },
       openOpenDialog() {
-        ga('send', 'event', 'Wheel', 'ShowOpenDialog', '');
+        Util.trackEvent('Wheel', 'ShowOpenDialog', '');
         this.$refs.opendialog.show();
       },
       openSaveDialog() {
-        ga('send', 'event', 'Wheel', 'ShowSaveDialog', '');
+        Util.trackEvent('Wheel', 'ShowSaveDialog', '');
         this.$refs.savedialog.show();
       },
       openShareDialog() {
-        ga('send', 'event', 'Wheel', 'GetSharableLink', '');
+        Util.trackEvent('Wheel', 'GetSharableLink', '');
         this.$refs.sharedialog.show();
       },
-      openOptionsDialog() {
-        ga('send', 'event', 'Wheel', 'ShowCustomizeDialog', '');
+      openCustomizeDialog() {
+        Util.trackEvent('Wheel', 'ShowCustomizeDialog', '');
         this.$refs.optionsdialog.show();
       },
       openTwitterDialog() {
-        ga('send', 'event', 'Wheel', 'ShowSocialMediaDialog', '');
+        Util.trackEvent('Wheel', 'ShowSocialMediaDialog', '');
         this.$refs.twitterdialog.show();
       },
       openSheetDialog() {
-        ga('send', 'event', 'Wheel', 'ShowSpreadsheetDialog', '');
+        Util.trackEvent('Wheel', 'ShowSpreadsheetDialog', '');
         this.$refs.sheetdialog.show();
       },
       setLocale(locale) {
@@ -306,7 +323,7 @@ limitations under the License.
           ConfettiLauncher.launch(this.wheelConfig.getCoalescedColors());
         }
         if (this.wheelConfig.displayWinnerDialog) {
-          setTimeout(_ => this.$refs.winnerdialog.show(winningEntry), 1000);
+          this.$refs.winnerdialog.show(winningEntry);
         }
         if (this.wheelConfig.autoRemoveWinner) {
           setTimeout(_ => this.removeName(winningEntry), 5000);
@@ -339,8 +356,8 @@ limitations under the License.
         this.showSnackbarMessage(msg);
       },
       authError(ex) {
-        const msg = this.$t('app.authError', {error: ex});
-        ga('send', 'event', 'AuthError', ex, navigator.userAgent);
+        const msg = this.$t('app.authError', {error: ex.toString()});
+        Util.trackEvent('AuthError', ex.toString(), navigator.userAgent);
         this.$buefy.dialog.alert({
           title: this.$t('app.Error'),
           message: msg,
@@ -357,3 +374,7 @@ limitations under the License.
     }
   }
 </script>
+
+<style>
+  .can-go-dark {}
+</style>

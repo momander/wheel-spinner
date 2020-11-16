@@ -124,9 +124,10 @@ export function browserIsIEOrOldEdge(userAgent) {
   return !!userAgent.match(re);
 }
 
-export function sortAlphabeticallyNonCaseSensitive(array) {
-  const arrayCopy = array.slice(0);
-  return arrayCopy.sort(alphabeticallyNonCaseSensitive);
+export function sortWheelEntries(entries) {
+  return entries.slice(0).sort((a, b) => {
+    return a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' });
+  })
 }
 
 export function isTouchScreen() {
@@ -155,10 +156,69 @@ export function getAddedEntries(oldEntries, newEntries) {
   return newEntries.filter(x => !oldEntries.includes(x));
 }
 
-function alphabeticallyNonCaseSensitive(a, b) {
-  a = a.toLowerCase();
-  b = b.toLowerCase();
-  if (a < b) return -1;
-  if (a > b) return 1;
-  return 0;
+export function initTracking() {
+  window.onerror = function(message, source, lineno, colno, error) {
+    try {
+      if (error) message = error.toString();
+      trackEvent('window.onerror', message, navigator.userAgent);
+    }
+    catch (ex) {
+      console.error(ex);
+    }
+  }
+}
+
+export function trackEvent(eventCategory, eventAction, eventLabel) {
+  if (location.host.startsWith('localhost')) return;
+  if (typeof ga !== 'undefined') {
+    ga('send', 'event', eventCategory, eventAction, eventLabel);
+  }
+}
+
+export function trackException(exception, extraData) {
+  console.error(exception);
+}
+
+export function escapeHtml(unsafe) {
+  return unsafe
+       .replace(/&/g, "&amp;")
+       .replace(/</g, "&lt;")
+       .replace(/>/g, "&gt;")
+       .replace(/"/g, "&quot;")
+       .replace(/'/g, "&#039;");
+}
+
+export function colorIsWhite(color) {
+  if (!color) return true;
+  return (color.toLowerCase() == '#ffffff');
+}
+
+export function getElementsByClassName(classNames) {
+  const retVal = [];
+  for (const className of classNames) {
+    for (const el of document.getElementsByClassName(className)) {
+      retVal.push(el);
+    }
+  }
+  return retVal;
+}
+
+export function updateColorStyles(darkMode, darkModeColor, pageColor) {
+  const sheet = [...document.styleSheets].find(
+    sheet => sheet.href &&
+    (sheet.href.includes('index.css') || sheet.href.includes('admin.css'))
+  );
+  const rule = [...sheet.rules].find(rule => rule.selectorText=='.can-go-dark');
+  if (darkMode) {
+    rule.style.color = '#fff';
+    rule.style.backgroundColor = darkModeColor;
+    document.documentElement.style.backgroundColor = '#000';
+    document.body.style.backgroundColor = '#000';
+  }
+  else {
+    rule.style.color = '';
+    rule.style.backgroundColor = '';
+    document.documentElement.style.backgroundColor = pageColor;
+    document.body.style.backgroundColor = pageColor;
+  }
 }

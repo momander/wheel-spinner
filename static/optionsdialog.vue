@@ -14,55 +14,70 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <b-modal :active.sync="optionsDialogVisible" :width="640" scroll="keep">
+  <b-modal :active.sync="optionsDialogVisible" :width="640" scroll="keep" :full-screen="$mq=='mobile'">
     <div class="modal-card" style="width: auto">
-      <section class="modal-card-body">
-        <b-tabs v-model="activeTab">
+      <section class="modal-card-body can-go-dark">
+        <b-tabs v-model="activeTab" type="is-boxed" size="is-small">
           <b-tab-item :label="$t('optionsdialog.During spin')">
             <br/>
-            <b-field :label="$t('optionsdialog.Sound')">
-              <b-select v-model="wheelConfig.duringSpinSound">
-                <option
-                  v-for="sound in duringSpinSounds"
-                  :value="sound.value"
-                  :key="sound.value">
-                  {{ $t(sound.name) }}
-                </option>
-              </b-select>
-            </b-field>
+            <div class="columns">
+              <div class="column is-2">
+                {{ $t('optionsdialog.Sound') }}
+              </div>
+              <div class="column">
+                <b-select v-model="wheelConfig.duringSpinSound">
+                  <option
+                    v-for="sound in duringSpinSounds"
+                    :value="sound.value"
+                    :key="sound.value">
+                    {{ $t(sound.name) }}
+                  </option>
+                </b-select>
+              </div>
+            </div>
             <br/>
             <b-checkbox v-model="wheelConfig.allowDuplicates">
               {{ $t('optionsdialog.Allow duplicates on wheel') }}
             </b-checkbox>
+            <b-checkbox v-model="wheelConfig.slowSpin">
+              {{ $t('optionsdialog.Spin slowly') }}
+            </b-checkbox>
             <hr>
-            <b-field :label="$t('optionsdialog.Spin time (seconds)')">
-              <b-slider v-model="wheelConfig.spinTime" :min="1" :max="30">
-                <template v-for="val in [10,20,30]">
-                  <b-slider-tick :value="val" :key="val">{{ val }}</b-slider-tick>
-                </template>
-              </b-slider>
-            </b-field>
+            {{ $t('optionsdialog.Spin time (seconds)') }}
+            <b-slider v-model="wheelConfig.spinTime" :min="1" :max="60">
+              <template v-for="val in [10,20,30,40,50,60]">
+                <b-slider-tick :value="val" :key="val">{{ val }}</b-slider-tick>
+              </template>
+            </b-slider>
             <hr>
-            <b-field :label="$t('optionsdialog.Max entries on wheel')">
-              <b-slider v-model="wheelConfig.maxNames" :min="4" :max="200">
-                <template v-for="val in [50,100,150,200]">
-                  <b-slider-tick :value="val" :key="val">{{ val }}</b-slider-tick>
-                </template>
-              </b-slider>
-            </b-field>
+            <b>{{ $t('optionsdialog.Max names on wheel') }}</b>
+            <br>
+            <small>
+              {{ $t('optionsdialog.All names in the text-box') }}
+            </small>
+            <b-slider v-model="wheelConfig.maxNames" :min="4" :max="500">
+              <template v-for="val in [50,100,150,200,250,300,350,400,450,500]">
+                <b-slider-tick :value="val" :key="val">{{ val }}</b-slider-tick>
+              </template>
+            </b-slider>
           </b-tab-item>
           <b-tab-item :label="$t('optionsdialog.After spin')">
             <br/>
-            <b-field :label="$t('optionsdialog.Sound')">
-              <b-select v-model="wheelConfig.afterSpinSound">
-                <option
-                  v-for="sound in afterSpinSounds"
-                  :value="sound.value"
-                  :key="sound.value">
-                  {{ $t(sound.name) }}
-                </option>
-              </b-select>
-            </b-field>
+            <div class="columns">
+              <div class="column is-2">
+                {{ $t('optionsdialog.Sound') }}
+              </div>
+              <div class="column">
+                <b-select v-model="wheelConfig.afterSpinSound">
+                  <option
+                    v-for="sound in afterSpinSounds"
+                    :value="sound.value"
+                    :key="sound.value">
+                    {{ $t(sound.name) }}
+                  </option>
+                </b-select>
+              </div>
+            </div>
             <br/>
             <b-checkbox v-model="wheelConfig.animateWinner">
               {{ $t('optionsdialog.Animate winning entry') }}
@@ -125,16 +140,33 @@ limitations under the License.
                 </div>
               </div>
             </div>
+            <hr>
+            <div class="columns" style="margin-bottom:10px">
+              <div class="column is-one-third">
+                {{ $t('optionsdialog.Background color') }}
+              </div>
+              <div class="column">
+                <div class="color-grid">
+                  <input type="color" v-model="wheelConfig.pageBackgroundColor">
+                </div>
+              </div>
+            </div>
+
           </b-tab-item>
           <b-tab-item :label="$t('optionsdialog.Image')">
             <br/>
-            <b-field :label="$t('optionsdialog.Image in the center of the wheel')">
-              <b-select v-model="wheelConfig.pictureType" expanded>
-                <option value="none">{{ $t('optionsdialog.None') }}</option>
-                <option value="gallery">{{ $t('optionsdialog.From Gallery') }}</option>
-                <option value="uploaded">{{ $t('optionsdialog.Custom') }}</option>
-              </b-select>
-            </b-field>
+            <div class="columns">
+              <div class="column is-half">
+                {{ $t('optionsdialog.Image in the center of the wheel') }}
+              </div>
+              <div class="column">
+                <b-select v-model="wheelConfig.pictureType" expanded>
+                  <option value="none">{{ $t('optionsdialog.None') }}</option>
+                  <option value="gallery">{{ $t('optionsdialog.From Gallery') }}</option>
+                  <option value="uploaded">{{ $t('optionsdialog.Custom') }}</option>
+                </b-select>
+              </div>
+            </div>
             <b-select :placeholder="$t('optionsdialog.Select a gallery picture')" v-model="wheelConfig.galleryPicture" v-show="wheelConfig.pictureType=='gallery'" expanded>
               <option
                 v-for="pic in galleryPictures"
@@ -155,16 +187,21 @@ limitations under the License.
                 </a>
               </b-upload>
             </b-field>
-            <b-field :label="$t('optionsdialog.Image size')">
-              <b-select v-model="wheelConfig.hubSize">
-                <option
-                  v-for="hubSize in hubSizes"
-                  :value="hubSize"
-                  :key="hubSize">
-                  {{ hubSize }}
-                </option>
-              </b-select>
-            </b-field>
+            <div class="columns">
+              <div class="column is-one-third">
+                {{ $t('optionsdialog.Image size') }}
+              </div>
+              <div class="column">
+                <b-select v-model="wheelConfig.hubSize">
+                  <option
+                    v-for="hubSize in hubSizes"
+                    :value="hubSize"
+                    :key="hubSize">
+                    {{ hubSize }}
+                  </option>
+                </b-select>
+              </div>
+            </div>
           </b-tab-item>
         </b-tabs>
       </section>
@@ -225,7 +262,7 @@ limitations under the License.
         var reader = new FileReader();
         const self = this;
         reader.onload = async function(e) {
-          ga('send', 'event', 'Wheel', 'UploadedCustomImage', '');
+          Util.trackEvent('Wheel', 'UploadedCustomImage', '');
           const dataUri = await ImageUtil.optimizeCenterImage(e.target.result);
           self.wheelConfig.setCustomPicture(newValue.name, dataUri);
           self.$buefy.dialog.confirm({
@@ -248,7 +285,7 @@ limitations under the License.
       },
       colorTheme: function(newValue) {
         if (newValue) {
-          ga('send', 'event', 'Wheel', 'SetColorTheme', newValue);
+          Util.trackEvent('Wheel', 'SetColorTheme', newValue);
           for (let i=0; i<this.wheelConfig.colorSettings.length; i++) {
             this.wheelConfig.colorSettings[i] = {color: '#000000', enabled: false};
           }
@@ -267,13 +304,12 @@ limitations under the License.
         this.optionsDialogVisible = true;
       },
       async setColorsFromCustomPicture() {
-        ga('send', 'event', 'Wheel', 'SetColorsFromCustomPicture', '');
+        Util.trackEvent('Wheel', 'SetColorsFromCustomPicture', '');
         const colors = await ImageUtil.extractColors(this.wheelConfig.customPictureDataUri);
         for (let i=0; i<colors.length; i++) {
           this.wheelConfig.colorSettings[i] = {color: colors[i], enabled: true};
         }
         this.$forceUpdate();
-        this.activeTab = 2;
       },
       saveOptions() {
         this.$store.commit('setWheelConfig', this.wheelConfig);

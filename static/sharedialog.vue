@@ -22,12 +22,13 @@ limitations under the License.
             <i class="fa fa-share-alt"></i>&nbsp;{{ $t('sharedialog.Shareable link') }}
           </p>
         </header>
-        <section class="modal-card-body">
+        <section class="modal-card-body can-go-dark">
           <p>
             {{ $t('sharedialog.If you continue') }}
+            {{ $t('sharedialog.This link will work for anyone') }}
           </p>
           <p style="margin-top:10px">
-            {{ $t('sharedialog.This link will work for anyone') }}
+            {{ $t('sharedialog.We want this website to be safe place for everyone') }}
           </p>
         </section>
         <footer class="modal-card-foot" style="justify-content:flex-end">
@@ -48,7 +49,7 @@ limitations under the License.
             <i class="fa fa-share-alt"></i>&nbsp;{{ $t('sharedialog.Shareable link') }}
           </p>
         </header>
-        <section class="modal-card-body">
+        <section class="modal-card-body can-go-dark">
           <div class="field">
             {{ $t('sharedialog.What should a person be able to do') }}
           </div>
@@ -81,7 +82,7 @@ limitations under the License.
             <i class="fa fa-share-alt"></i>&nbsp;{{ $t('sharedialog.Shareable link') }}
           </p>
         </header>
-        <section class="modal-card-body">
+        <section class="modal-card-body can-go-dark">
           <p>
             {{ $t('sharedialog.Link to this wheel') }}
           </p>
@@ -112,6 +113,7 @@ limitations under the License.
 <script>
   import * as ServerFunctions from './ServerFunctions.js';
   import * as Locales from './Locales.js';
+  import * as Util from './Util.js';
 
   export default {
     data() {
@@ -151,12 +153,13 @@ limitations under the License.
         try {
           this.$emit('start-wait-animation');
           const path = await ServerFunctions.createSharedWheel(this.editableWheel, wheelConfig);
-          this.sharableLink = Locales.getAbsoluteUrl(
+          this.sharableLink = 'https://' + Locales.getAbsoluteUrl(
                                 window.location.host, this.$i18n.locale, path);
           this.enter_ShowingLink();
         }
-        catch (error) {
-          alert(error);
+        catch (ex) {
+          Util.trackException(ex);
+          alert(ex);
         }
         finally {
           this.$emit('stop-wait-animation');
@@ -169,7 +172,7 @@ limitations under the License.
         this.setState('Inactive');
       },
       copyLink() {
-        ga('send', 'event', 'Wheel', 'CopySharableLink', '');
+        Util.trackEvent('Wheel', 'CopySharableLink', '');
         const textBox = document.querySelector('#sharableLinkText');
         textBox.select();
         document.execCommand("copy");

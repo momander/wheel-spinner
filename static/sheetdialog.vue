@@ -22,7 +22,7 @@ limitations under the License.
             <i class="fa fa-link"></i>&nbsp;{{ $t('common.Link Google Spreadsheet') }}
           </p>
         </header>
-        <section class="modal-card-body">
+        <section class="modal-card-body can-go-dark">
           <p>
             {{ $t('sheetdialog.When you link a spreadsheet') }}
           </p>
@@ -34,9 +34,11 @@ limitations under the License.
           <b-button @click="enter_inactive()">
             {{ $t('common.Cancel') }}
           </b-button>
-          <b-button type="is-primary" @click="enter_userIsLoggingIn()">
-            <i class="fab fa-google"></i>&nbsp;{{ $t('sheetdialog.Google sign-in') }}
-          </b-button>
+          <input type="image" style="height:40px"
+            alt="Sign in with Google"
+            src="/images/btn_google_signin_dark_normal_web@2x.png"
+            @click="enter_userIsLoggingIn()"
+          >
         </footer>
       </div>
     </b-modal>
@@ -49,10 +51,15 @@ limitations under the License.
           </p>
           <profiledropdown v-on:log-out="enter_inactive()"></profiledropdown>
         </header>
-        <section class="modal-card-body">
-          <b-field :label="$t('sheetdialog.Selected spreadsheet')">
-            <b-input v-model="sheetTitle" disabled></b-input>
-          </b-field>
+        <section class="modal-card-body can-go-dark">
+          <div class="columns">
+            <div class="column is-one-third">
+              {{ $t('sheetdialog.Selected spreadsheet') }}
+            </div>
+            <div class="column">
+              <b-input v-model="sheetTitle" disabled></b-input>
+            </div>
+          </div>
           <div class="columns">
             <div class="column is-one-fifth">
               {{ $t('sheetdialog.Tab') }}
@@ -107,6 +114,7 @@ limitations under the License.
   import * as SheetPicker from './SheetPicker.js';
   import * as Util from './Util.js';
   import profiledropdown from './profiledropdown.vue';
+  import './images/btn_google_signin_dark_normal_web@2x.png';
 
   export default {
     components: { profiledropdown },
@@ -124,11 +132,21 @@ limitations under the License.
       sheetLinked() {
         return this.$store.state.appStatus.sheetLinked;
       },
-      displayLoginDialog() {
-        return this.fsm=='userIsPickingLoginMethod';
+      displayLoginDialog: {
+        get: function() {
+          return this.fsm=='userIsPickingLoginMethod';
+        },
+        set: function(newValue) {
+          if (newValue == false) this.fsm = 'inactive';
+        }
       },
-      displaySheetConfigDialog() {
-        return this.fsm=='userIsPickingTabCol';
+      displaySheetConfigDialog: {
+        get: function() {
+          return this.fsm=='userIsPickingTabCol';
+        },
+        set: function(newValue) {
+          if (newValue == false) this.fsm = 'inactive';
+        }
       },
       linkSheetButtonEnabled() {
         return (this.selectedTab && this.selectedColumn);
@@ -170,18 +188,19 @@ limitations under the License.
       async enter_userIsLoggingIn() {
         this.setState('userIsLoggingIn');
         try {
-          ga('send', 'event', 'Wheel', 'LoginForSheetAttempt', '');
+          Util.trackEvent('Wheel', 'LoginForSheetAttempt', '');
           const accessToken = await Firebase.logInToSheets(this.$i18n.locale);
           await SheetPicker.load(accessToken);
           const user = await Firebase.getLoggedInUser();
           this.$store.commit('logInUser', {
             photoUrl: user.photoURL, displayName: user.displayName, uid: user.uid
           });
-          ga('send', 'event', 'Wheel', 'LoginForSheetSuccess', '');
+          Util.trackEvent('Wheel', 'LoginForSheetSuccess', '');
           this.enter_userIsPickingSheet();
         }
         catch (ex) {
-          ga('send', 'event', 'Wheel', 'LoginForSheetFailure', ex);
+          Util.trackException(ex);
+          Util.trackEvent('Wheel', 'LoginForSheetFailure', ex.toString());
           this.enter_authError(ex);
         }
       },
@@ -193,6 +212,7 @@ limitations under the License.
           this.enter_userIsPickingTabCol();
         }
         catch (ex) {
+          Util.trackException(ex);
           this.enter_authError(ex);
         }
       },
@@ -204,7 +224,7 @@ limitations under the License.
       },
       enter_linkingSheet() {
         this.setState('linkingSheet');
-        ga('send', 'event', 'Wheel', 'LinkSpreadsheet', '');
+        Util.trackEvent('Wheel', 'LinkSpreadsheet', '');
         this.$store.commit('linkSheet');
         this.sheetLinkedAtMs = new Date().getTime();
         this.enter_readingSheet();
@@ -222,7 +242,8 @@ limitations under the License.
           this.enter_waitingToReadSheet();
         }
         catch (ex) {
-          ga('send', 'event', ex, 'enter_readingSheet()', navigator.userAgent);
+          Util.trackException(ex);
+          Util.trackEvent(ex, 'enter_readingSheet()', navigator.userAgent);
           this.enter_authError(ex);
         }
       },

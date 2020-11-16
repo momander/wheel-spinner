@@ -22,7 +22,7 @@ limitations under the License.
             <i class="fa fa-save"></i>&nbsp;{{ $t('savedialog.Save wheel') }}
           </p>
         </header>
-        <section class="modal-card-body">
+        <section class="modal-card-body can-go-dark">
           <p>
             {{ $t('savedialog.To save wheels') }}
           </p>
@@ -31,15 +31,16 @@ limitations under the License.
           <b-button @click="enter_inactive()">
             {{ $t('common.Cancel') }}
           </b-button>
-          <b-button type="is-primary" @click="enter_userIsLoggingIn('Google')">
-            <i class="fab fa-google"></i>&nbsp;Google
-          </b-button>
-          <b-button type="is-primary" @click="enter_userIsLoggingIn('Facebook')">
-            <i class="fab fa-facebook-f"></i>&nbsp;Facebook
-          </b-button>
-          <b-button type="is-primary" @click="enter_userIsLoggingIn('Twitter')">
-            <i class="fab fa-twitter"></i>&nbsp;Twitter
-          </b-button>
+          <input type="image" style="height:40px; margin-right:10px"
+            alt="Sign in with Google"
+            src="/images/btn_google_signin_dark_normal_web@2x.png"
+            @click="enter_userIsLoggingIn('Google')"
+          >
+          <input type="image"
+            alt="Sign in with Twitter"
+            src="/images/sign-in-with-twitter-gray.png.img.fullhd.medium.png"
+            @click="enter_userIsLoggingIn('Twitter')"
+          >
         </footer>
       </div>
     </b-modal>
@@ -57,20 +58,30 @@ limitations under the License.
             v-on:show-snackbar-message="(msg) => $emit('show-snackbar-message', msg)"
           ></profiledropdown>
         </header>
-        <section class="modal-card-body">
-          <b-field :label="$t('savedialog.Save as')">
-            <b-input v-model="saveAsName" @keyup.native.enter="enter_savingWheel" ref="saveAsField" required maxlength="100"></b-input>
-          </b-field>
-          <b-field :label="$t('savedialog.Your existing wheels')">
-            <b-select :placeholder="$t('savedialog.Select a wheel')" v-model="existingWheelTitle" expanded>
-              <option
-                v-for="wheel in wheels"
-                :value="wheel.title"
-                :key="wheel.title">
-                {{ wheel.title }}
-              </option>
-            </b-select>
-          </b-field>
+        <section class="modal-card-body can-go-dark">
+          <div class="columns">
+            <div class="column is-one-third">
+              {{ $t('savedialog.Save as') }}
+            </div>
+            <div class="column">
+              <b-input v-model="saveAsName" @keyup.native.enter="enter_savingWheel" ref="saveAsField" required maxlength="100"></b-input>
+            </div>
+          </div>
+          <div class="columns">
+            <div class="column is-one-third">
+              {{ $t('savedialog.Your existing wheels') }}
+            </div>
+            <div class="column">
+              <b-select :placeholder="$t('savedialog.Select a wheel')" v-model="existingWheelTitle" expanded>
+                <option
+                  v-for="wheel in wheels"
+                  :value="wheel.title"
+                  :key="wheel.title">
+                  {{ wheel.title }}
+                </option>
+              </b-select>
+            </div>
+          </div>
         </section>
         <footer class="modal-card-foot" style="justify-content:flex-end">
           <b-button size="is-medium" @click="enter_inactive()">
@@ -91,13 +102,14 @@ limitations under the License.
   import WheelConfig from './WheelConfig.js';
   import profiledropdown from './profiledropdown.vue';
   import * as ServerFunctions from './ServerFunctions.js';
+  import './images/btn_google_signin_dark_normal_web@2x.png';
+  import './images/sign-in-with-twitter-gray.png.img.fullhd.medium.png';
 
   export default {
     components: { profiledropdown },
     data() {
       return {
-        wheels: [], fsm: 'inactive', saveAsName: '', existingWheelTitle: null,
-        userEmail: ''
+        wheels: [], fsm: 'inactive', saveAsName: '', existingWheelTitle: null
       }
     },
     computed: {
@@ -107,11 +119,21 @@ limitations under the License.
       uid() {
         return this.$store.state.appStatus.userUid
       },
-      displayLoginDialog() {
-        return this.fsm=='userIsPickingLoginMethod'
+      displayLoginDialog: {
+        get: function() {
+          return this.fsm=='userIsPickingLoginMethod';
+        },
+        set: function(newValue) {
+          if (newValue == false) this.fsm = 'inactive';
+        }
       },
-      displaySaveDialog() {
-        return this.fsm=='userIsEnteringName';
+      displaySaveDialog: {
+        get: function() {
+          return this.fsm=='userIsEnteringName';
+        },
+        set: function(newValue) {
+          if (newValue == false) this.fsm = 'inactive';
+        }
       },
     },
     watch: {
@@ -136,7 +158,6 @@ limitations under the License.
           this.$store.commit('logInUser', {
             photoUrl: user.photoURL, displayName: user.displayName, uid: user.uid
           });
-          this.userEmail = user.email;
           this.$emit('stop-wait-animation');
           this.enter_loadingWheels();
         }
@@ -154,20 +175,21 @@ limitations under the License.
       async enter_userIsLoggingIn(providerName) {
         this.fsm = 'userIsLoggingIn';
         try {
-          ga('send', 'event', 'Wheel', `LoginForSaveAttempt-${providerName}`, '');
+          Util.trackEvent('Wheel', `LoginForSaveAttempt-${providerName}`, '');
           this.$emit('start-wait-animation');
           const user = await Firebase.logIn(providerName, this.$i18n.locale);
           this.$store.commit('logInUser', {
             photoUrl: user.photoURL, displayName: user.displayName, uid: user.uid
           });
-          this.userEmail = user.email;
+          await ServerFunctions.convertAccount(await user.getIdToken());
           this.$emit('stop-wait-animation');
-          ga('send', 'event', 'Wheel', `LoginForSaveSuccess-${providerName}`, '');
+          Util.trackEvent('Wheel', `LoginForSaveSuccess-${providerName}`, '');
           this.enter_loadingWheels();
         }
         catch (ex) {
           this.$emit('stop-wait-animation');
-          ga('send', 'event', 'Wheel', `LoginForSaveFailure-${providerName}`, ex);
+          Util.trackException(ex, {op: `LoginForSaveFailure-${providerName}`});
+          Util.trackEvent('Wheel', `LoginForSaveFailure-${providerName}`, ex.toString());
           this.enter_authError(ex);
         }
       },
@@ -190,9 +212,8 @@ limitations under the License.
         this.$store.commit('setWheelTitle', this.saveAsName);
         const saveValues = this.$store.state.wheelConfig.getValues();
         try {
-          const id = event.shiftKey ? this.userEmail : this.uid;
           this.$emit('start-wait-animation');
-          await Firebase.saveWheel(id, saveValues);
+          await Firebase.saveWheel(this.uid, saveValues);
           this.$emit('stop-wait-animation');
           const message = this.$t('savedialog.Wheel saved successfully',
               {wheelTitle: Util.getHtmlAsText(this.saveAsName)}
@@ -202,6 +223,7 @@ limitations under the License.
         }
         catch(ex) {
           this.$emit('stop-wait-animation');
+          Util.trackException(ex);
           this.enter_authError(ex);
         }
       },

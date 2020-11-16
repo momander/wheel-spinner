@@ -26,9 +26,16 @@ export default new Vuex.Store({
     preferences: new Preferences(),
     appStatus: {
       fullScreen: false, online: true, wheelSpinning: false, sheetLinked: false,
-      userIsLoggedIn: false, userPhotoUrl: '', userDisplayName: '', userUid: ''
+      userIsLoggedIn: false, userPhotoUrl: '', userDisplayName: '', userUid: '',
+      darkMode: false
     },
-    version: '1'
+    version: '2'
+  },
+  getters: {
+    entryCount: state => {
+      return state.wheelConfig.names.length;
+    },
+    darkMode: state => state.preferences.darkMode
   },
   mutations: {
     setWheelConfig(state, newWheelConfig) {
@@ -46,9 +53,7 @@ export default new Vuex.Store({
       state.wheelConfig.names = Util.shuffleArray(state.wheelConfig.names);
     },
     sortNames(state) {
-      state.wheelConfig.names = Util.sortAlphabeticallyNonCaseSensitive(
-        state.wheelConfig.names
-      );
+      state.wheelConfig.names = Util.sortWheelEntries(state.wheelConfig.names);
     },
     appendNames(state, names) {
       const newNames = state.wheelConfig.names.concat(names);
@@ -107,10 +112,10 @@ export default new Vuex.Store({
       newPrefs.appInfoVisible = !newPrefs.appInfoVisible;
       state.preferences = newPrefs;
     },
-    setAppInfoVisible(state, value) {
+    toggleDarkMode(state) {
       const newPrefs = state.preferences.clone();
-      newPrefs.appInfoVisible = value;
+      newPrefs.darkMode = !newPrefs.darkMode;
       state.preferences = newPrefs;
-    }
+    },
   }
 })

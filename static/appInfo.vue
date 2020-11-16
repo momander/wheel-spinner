@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div class="card" style="margin-top:10px">
+  <div class="card can-go-dark" style="margin-top:10px">
     <div class="card-content" style="padding:10px">
-      <div class="content" style="font-size:0.8em">
+      <div class="content">
         <div v-if="appInfoVisible">
           <b-button @click="toggleVisibility" type="is-light" pack="fas" icon-left="chevron-circle-down" size="is-small" style="float:right;margin-left:10px"></b-button>
           {{ $t('appInfo.The entries you make') }}
@@ -33,6 +33,8 @@ limitations under the License.
 </template>
 
 <script>
+  import * as Util from './Util.js';
+
   export default {
     computed: {
       appInfoVisible() {
@@ -44,7 +46,7 @@ limitations under the License.
     },
     methods: {
       toggleVisibility() {
-        ga('send', 'event', 'Wheel', 'ToggleAppInfoVisibility', '');
+        Util.trackEvent('Wheel', 'ToggleAppInfoVisibility', '');
         this.$store.commit('toggleAppInfoVisibility');
       }
     }

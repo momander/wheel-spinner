@@ -22,7 +22,7 @@ export default function WheelConfig(winnerMessage) {
     '炒麵 - Chow mein', 'Tortilla española', 'Crêpes', 'Pierogi', 'Feijoada',
     'ผัดไทย - Pad thai', 'Döner kebab', 'Phở'
   ];
-  this.colorSettings = [
+    this.colorSettings = [
     {color: '#3369E8', enabled: true},
     {color: '#D50F25', enabled: true},
     {color: '#EEB211', enabled: true},
@@ -30,6 +30,7 @@ export default function WheelConfig(winnerMessage) {
     {color: '#000000', enabled: false},
     {color: '#000000', enabled: false},
   ];
+  this.pageBackgroundColor = '#FFFFFF';
   this.pictureType = 'none';
   this.galleryPicture = 'images/none.png';
   this.customPictureName = '';
@@ -37,7 +38,7 @@ export default function WheelConfig(winnerMessage) {
   this.allowDuplicates = true;
   this.duringSpinSound = 'ticking-sound';
   this.afterSpinSound = 'applause-sound';
-  this.maxNames = 200;
+  this.maxNames = 500;
   this.spinTime = 10;
   this.playCheers = true;
   this.launchConfetti = true;
@@ -47,6 +48,7 @@ export default function WheelConfig(winnerMessage) {
   this.winnerMessage = winnerMessage || 'We have a winner!';
   this.playClickWhenWinnerRemoved = false;
   this.hubSize = 'S';
+  this.slowSpin = false;
 
   this.loadJson = function(jsonString) {
     let obj = JSON.parse(jsonString);
@@ -140,9 +142,28 @@ export default function WheelConfig(winnerMessage) {
   }
 
   this.convertOldData = function() {
-    this.names = this.names.map(
-      name => name.replace(/height="25"/, 'style="height:25px"')
-    );
+    if (Array.isArray(this.names)) {
+      this.names = this.names.map(
+        // Convert old height metric to new height metric.
+        name => name.replace(/height="25"/, 'style="height:25px"')
+      );
+      // Remove any entries that are unprintable characters.
+      this.names = this.names.filter(name => name.trim());
+    }
+    if (Array.isArray(this.entries)) {
+      // Convert from new "entries" format to old "names" format.
+      this.names = this.entries.map(entry => {
+        let retVal = '';
+        if (entry.image) {
+          retVal += `<img src="${entry.image}" style="height:25px;font-size:1rem;">`;
+        }
+        if (entry.text) {
+          retVal += Util.escapeHtml(entry.text);
+        }
+        return retVal;
+      });
+      delete this.entries;
+    }
     this.maxNames = parseInt(this.maxNames);
     this.spinTime = parseInt(this.spinTime);
     if (this.playTicks===false) {

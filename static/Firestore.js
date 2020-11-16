@@ -28,7 +28,16 @@ export async function getWheels(db, uid) {
   snap.forEach(function(doc) {
     wheels.push(doc.data().config);
   });
-  return wheels.sort(alphabeticallyNonCaseSensitiveByTitle);
+  return wheels.sort((a, b) =>
+    a.title.localeCompare(b.title, 'en', { numeric: true, sensitivity: 'base' })
+  );
+}
+
+export async function setAdminsWheelsToZero(db, adminsUid) {
+  await db.doc(`admins/${adminsUid}`).update({
+    totalReviews: 0,
+    sessionReviews: 0
+  });
 }
 
 export async function logWheelRead(db, serverNow, uid, wheelTitle) {
@@ -73,6 +82,97 @@ export async function deleteAccount(db, uid) {
   await batch.commit();
 }
 
+export async function getDirtyWords(db) {
+  const docSnapshot = await db.doc("settings/DIRTY_WORDS").get();
+  return docSnapshot.data().value.sort();
+}
+
+export async function setDirtyWords(db, words) {
+  const formattedWords = words.map(w => w.toLowerCase()).sort();
+  await db.doc("settings/DIRTY_WORDS").set({value: formattedWords});
+}
+
+export async function deleteAdmin(db, uid) {
+  await db.doc(`admins/${uid}`).delete();
+}
+
+export async function addAdmin(db, uid, name) {
+  await db.doc(`admins/${uid}`).set({
+    uid: uid,
+    name: name,
+  });
+}
+
+export async function approveSharedWheel(db, increment, path, uid) {
+  const batch = db.batch();
+  batch.update(db.doc(`shared-wheels/${path}`), {reviewStatus: 'Approved'});
+  batch.delete(db.doc(`shared-wheels-review-queue/${path}`));
+  batch.update(db.doc(`admins/${uid}`), {
+    totalReviews: increment,
+    sessionReviews: increment,
+    lastReview: new Date()
+  });
+  await batch.commit();
+}
+
+export async function deleteSharedWheel(db, increment, path, uid) {
+  const wheelDoc = await db.doc(`shared-wheels/${path}`).get();
+  let wheel;
+  if (wheelDoc.exists) wheel = wheelDoc.data();
+  await Promise.all([
+    db.doc(`shared-wheels/${path}`).delete(),
+    db.doc(`shared-wheels-review-queue/${path}`).delete(),
+    db.doc(`shared-wheels-rejected/${path}`).set(wheel),
+    db.doc(`admins/${uid}`).update({totalReviews: increment}),
+    db.doc(`admins/${uid}`).update({sessionReviews: increment}),
+    db.doc(`admins/${uid}`).update({lastReview: new Date()}),
+  ])
+}
+
+export async function resetSessionReviews(db, uid) {
+  await db.doc(`admins/${uid}`).update({sessionReviews: 0});
+}
+
+export async function getSharedWheel(db, path) {
+  const doc = await db.doc(`shared-wheels/${path}`).get();
+  if (doc.exists) {
+    return doc.data();
+  }
+}
+
+export async function getNextSharedWheelForReview(db) {
+  let wheel;
+  if (Math.random() < 0.1) {
+    const querySnapshot = await db.collection('shared-wheels-review-queue')
+                                  .where('reviewStatus', '==', 'Suspicious')
+                                  .limit(1)
+                                  .get();
+    if (querySnapshot.size>0) {
+      wheel = querySnapshot.docs[0].data();
+    }
+  }
+  if (!wheel && Math.random() < 0.5) {
+    const querySnapshot = await db.collection('shared-wheels-review-queue')
+                                  .where('predictedApproval', '<', 0.7)
+                                  .orderBy('predictedApproval', 'asc')
+                                  .limit(1)
+                                  .get();
+    if (querySnapshot.size>0) {
+      wheel = querySnapshot.docs[0].data();
+    }
+  }
+  if (!wheel) {
+    const querySnapshot = await db.collection('shared-wheels-review-queue')
+                                  .orderBy('lastRead', 'desc')
+                                  .limit(1)
+                                  .get();
+    if (querySnapshot.size>0) {
+      wheel = querySnapshot.docs[0].data();
+    }
+  }
+  return wheel;
+}
+
 async function wheelExists(db, uid, title) {
   const doc = await db.doc(`accounts/${uid}/wheels/${title}`).get();
   return doc.exists;
@@ -97,12 +197,4 @@ async function createNewWheel(db, serverNow, uid, config) {
   };
   const docRef = await db.doc(`accounts/${uid}/wheels/${config.title}`);
   await docRef.set(data);
-}
-
-function alphabeticallyNonCaseSensitiveByTitle(a, b) {
-  let titleA = a.title.toLowerCase();
-  let titleB = b.title.toLowerCase();
-  if (titleA < titleB) return -1;
-  if (titleA > titleB) return 1;
-  return 0;
 }

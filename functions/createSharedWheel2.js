@@ -15,24 +15,99 @@ limitations under the License.
 */
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const SharedWheelService = require('./SharedWheelService.js');
 const express = require('express');
 const cors = require('cors');
 const app = express();
 app.use(cors({ origin: true }));
+const Util = require('./Util.js');
+
+const db = admin.firestore();
 
 app.post('/', async (req, res) => {
   try {
-    const path = await SharedWheelService.create(
-      admin.firestore(),
-      admin.firestore.FieldValue.serverTimestamp(),
+    if (await containsDirtyWords(req.body.wheelConfig.names)) {
+      res.status(451).json({error: 'Please try something more family-friendly.'});
+      return;
+    }
+    const path = await createSharedWheel(
       req.body.wheelConfig,
       req.body.editable
     );
     res.json({path: path});
   }
   catch(ex) {
-    res.status(500).json({error: ex});
+    console.error(ex);
+    res.status(500).json({error: ex.toString()});
   }
 });
 exports.func = () => functions.https.onRequest(app);
+
+async function containsDirtyWords(entries) {
+  let dirtyWords = [];
+  try {
+    dirtyWords = await Util.getSetting('DIRTY_WORDS');
+  }
+  catch(ex) {
+    console.error(ex);
+  }
+  return entries.some(entry => {
+    const textEntry = extractText(entry).toLowerCase().replace(/&nbsp;/g, ' ');
+    const wordBreaks = /[,.:;!\/\?\-\+"\[\]\(\)_#=]/g;
+    const wordsInEntry = textEntry.replace(wordBreaks, ' ').split(' ');
+    return dirtyWords.some(dirtyWord => {
+      return wordsInEntry.some(wordInEntry => wordInEntry==dirtyWord)
+    })
+  })
+}
+
+async function createSharedWheel(config, editable=true) {
+  const path = await createUniquePath();
+  config.path = path;
+  newWheel = {
+    path: path,
+    config: config,
+    created: admin.firestore.FieldValue.serverTimestamp(),
+    lastRead: null,
+    editable: editable,
+    readCount: 0
+  }
+  await db.collection("shared-wheels").doc(path).set(newWheel);
+  return path;
+}
+
+async function createUniquePath() {
+  let newPath;
+  while (true) {
+    newPath = getRandomPath();
+    if (await pathIsAvailable(newPath)) {
+      break;
+    }
+  }
+  return newPath;
+}
+
+function getRandomPath() {
+  return `${getRandomChars(3)}-${getRandomChars(3)}`;
+}
+
+async function pathIsAvailable(path) {
+  doc = await db.collection('shared-wheels').where("path", "==", path).get();
+  return !doc.exists;
+}
+
+function getRandomChars(charCount) {
+  let retVal = '';
+  chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  for (i=0; i<charCount; i++) {
+    retVal += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return retVal;
+}
+
+function extractText(entry) {
+  const match = entry.match(/<img.*?src="(.*?)".*?>/);
+  if (match) {
+    entry = entry.replace(match[0], ' ');
+  }
+  return entry;
+}

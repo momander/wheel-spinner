@@ -31,5 +31,9 @@ export async function load(windowLocation) {
     }
     wheelConfig = result.wheelConfig;
   }
-  return {redirectUrl: redirectUrl, wheelConfig: wheelConfig};
+  return {
+    redirectUrl: redirectUrl,
+    wheelConfig: wheelConfig,
+    sharedWheelPath: path.sharedWheel
+  };
 }

@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div id="names" class="textarea"
-       :style="'height:' + ($store.state.preferences.appInfoVisible ? '400px' : '550px')"
+  <div id="names" class="textarea can-go-dark" spellcheck="false"
+       :style="'height:' + ($store.state.preferences.appInfoVisible ? '380px' : '520px')"
        style="overflow: auto; font-family: BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;"
        contentEditable="true" v-on:paste="onPaste" v-on:input="setNames()"
        v-on:keyup="IE_setNames"></div>
@@ -107,7 +107,7 @@ limitations under the License.
         // Intercept paste into the text-box. Transform rich text into plain text,
         // unless a data image is being pasted.
         e.preventDefault();
-        ga('send', 'event', 'Wheel', 'PasteIntoTextbox', '');
+        Util.trackEvent('Wheel', 'PasteIntoTextbox', '');
         if (e.clipboardData) {
           let html = (e.originalEvent || e).clipboardData.getData('text/html');
           let match = html.match(/(<.*?src="data:image.*?>)/);

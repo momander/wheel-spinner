@@ -20,23 +20,19 @@ import VueMq from 'vue-mq';
 import store from './store.js';
 import viewapp from './viewapp.vue';
 import * as Locales from './Locales.js';
+import * as Util from './Util.js';
 
 import 'buefy/dist/buefy.css';
 
 import './images/favicon.png';
+import './images/icon_57.png';
 import './images/icon_192.png';
 import './images/icon_512.png';
 import './images/favicon.ico';
 import './images/404_cat.png';
 import './images/link.png';
 
-
-window.onerror = function(message, source, lineno, colno, error) {
-  if (error) message = error.stack;
-  if (!location.host.startsWith('localhost')) {
-    ga('send', 'event', 'window.onerror', message, navigator.userAgent);
-  }
-}
+Util.initTracking();
 
 Vue.use(Buefy, {defaultIconPack: 'fas'});
 Vue.use(VueMq, {

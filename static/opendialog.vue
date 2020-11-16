@@ -22,7 +22,7 @@ limitations under the License.
             <i class="fa fa-folder-open"></i>&nbsp;{{ $t('opendialog.Open wheel') }}
           </p>
         </header>
-        <section class="modal-card-body">
+        <section class="modal-card-body can-go-dark">
           <p>
             {{ $t('opendialog.To open wheels') }}
           </p>
@@ -31,15 +31,16 @@ limitations under the License.
           <b-button @click="enter_inactive()">
             {{ $t('common.Cancel') }}
           </b-button>
-          <b-button type="is-primary" @click="enter_userIsLoggingIn('Google')">
-            <i class="fab fa-google"></i>&nbsp;Google
-          </b-button>
-          <b-button type="is-primary" @click="enter_userIsLoggingIn('Facebook')">
-            <i class="fab fa-facebook-f"></i>&nbsp;Facebook
-          </b-button>
-          <b-button type="is-primary" @click="enter_userIsLoggingIn('Twitter')">
-            <i class="fab fa-twitter"></i>&nbsp;Twitter
-          </b-button>
+          <input type="image" style="height:40px; margin-right:10px"
+            alt="Sign in with Google"
+            src="/images/btn_google_signin_dark_normal_web@2x.png"
+            @click="enter_userIsLoggingIn('Google')"
+          >
+          <input type="image"
+            alt="Sign in with Twitter"
+            src="/images/sign-in-with-twitter-gray.png.img.fullhd.medium.png"
+            @click="enter_userIsLoggingIn('Twitter')"
+          >
         </footer>
       </div>
     </b-modal>
@@ -57,8 +58,8 @@ limitations under the License.
             v-on:show-snackbar-message="(msg) => $emit('show-snackbar-message', msg)"
           ></profiledropdown>
         </header>
-        <section class="modal-card-body">
-          <table class="table">
+        <section class="modal-card-body can-go-dark">
+          <table class="table can-go-dark">
             <tr v-for="wheel in wheels" :key="wheel.title">
               <td>{{ wheel.title }}</td>
               <td>
@@ -95,6 +96,8 @@ limitations under the License.
   import WheelConfig from './WheelConfig.js';
   import profiledropdown from './profiledropdown.vue';
   import * as ServerFunctions from './ServerFunctions.js';
+  import './images/btn_google_signin_dark_normal_web@2x.png';
+  import './images/sign-in-with-twitter-gray.png.img.fullhd.medium.png';
 
   export default {
     components: { profiledropdown },
@@ -110,12 +113,22 @@ limitations under the License.
       uid() {
         return this.$store.state.appStatus.userUid
       },
-      displayLoginDialog() {
-        return this.fsm=='userIsPickingLoginMethod'
+      displayLoginDialog: {
+        get: function() {
+          return this.fsm=='userIsPickingLoginMethod';
+        },
+        set: function(newValue) {
+          if (newValue == false) this.fsm = 'inactive';
+        }
       },
-      displayWheelDialog() {
-        const states = ['userIsPickingWheel', 'confirmingDelete', 'deletingWheel'];
-        return states.includes(this.fsm);
+      displayWheelDialog: {
+        get: function() {
+          const states = ['userIsPickingWheel', 'confirmingDelete', 'deletingWheel'];
+          return states.includes(this.fsm);
+        },
+        set: function(newValue) {
+          if (newValue == false) this.fsm = 'inactive';
+        }
       },
     },
     methods: {
@@ -148,19 +161,21 @@ limitations under the License.
       async enter_userIsLoggingIn(providerName) {
         this.fsm = 'userIsLoggingIn';
         try {
-          ga('send', 'event', 'Wheel', `LoginForOpenAttempt-${providerName}`, '');
+          Util.trackEvent('Wheel', `LoginForOpenAttempt-${providerName}`, '');
           this.$emit('start-wait-animation');
           const user = await Firebase.logIn(providerName, this.$i18n.locale);
           this.$store.commit('logInUser', {
             photoUrl: user.photoURL, displayName: user.displayName, uid: user.uid
           });
+          await ServerFunctions.convertAccount(await user.getIdToken());
           this.$emit('stop-wait-animation');
-          ga('send', 'event', 'Wheel', `LoginForOpenSuccess-${providerName}`, '');
+          Util.trackEvent('Wheel', `LoginForOpenSuccess-${providerName}`, '');
           this.enter_loadingWheels();
         }
         catch (ex) {
           this.$emit('stop-wait-animation');
-          ga('send', 'event', 'Wheel', `LoginForOpenFailure-${providerName}`, ex);
+          Util.trackException(ex, {op: `LoginForOpenFailure-${providerName}`});
+          Util.trackEvent('Wheel', `LoginForOpenFailure-${providerName}`, ex.toString());
           this.enter_authError(ex);
         }
       },
@@ -215,6 +230,7 @@ limitations under the License.
           this.enter_userIsPickingWheel();
         }
         catch (ex) {
+          Util.trackException(ex);
           this.$emit('stop-wait-animation');
           this.enter_authError(ex);
         }

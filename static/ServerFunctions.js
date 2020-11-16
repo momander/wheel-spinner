@@ -15,6 +15,7 @@ limitations under the License.
 */
 import '@babel/polyfill';
 import 'whatwg-fetch';
+import * as Util from './Util.js';
 
 export async function createSharedWheel(editable, wheelConfig) {
   const payload = {editable: editable, wheelConfig: wheelConfig.getValues()};
@@ -26,7 +27,19 @@ export async function createSharedWheel(editable, wheelConfig) {
     body: JSON.stringify(payload)
   });
   const respObj = await response.json();
+  if (respObj.hasOwnProperty('error')) throw respObj.error;
   return respObj.path;
+}
+
+export async function logSharedWheelRead(path) {
+  const payload = {path: path};
+  const url = process.env.FUNCTION_PREFIX + '/logSharedWheelRead';
+  const response = await fetch(url, {
+    method: 'POST',
+    mode: 'cors',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
 }
 
 export async function getSharedWheel(path) {
@@ -48,4 +61,19 @@ export async function fetchSocialMediaUsers(searchTerm) {
   });
   const respObj = await response.json();
   return respObj;
+}
+
+export async function convertAccount(idToken) {
+  const url = process.env.FUNCTION_PREFIX + '/convertAccount';
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {'authorization': idToken}
+    });
+    await response.json();
+  }
+  catch(ex) {
+    Util.trackException(ex);
+  }
 }
