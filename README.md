@@ -3,13 +3,29 @@
 **This is not an officially supported Google product.**
 
 This README explains how to install the app and get it running in the cloud.
-This document is split up into three sections:
+This document is split up into five sections:
+1. Running the app 100% locally without any server setup
 1. Creating your test environment
 1. Creating your production environment
 1. Configuring advanced functionality
 1. Adding gallery images, sound effects, and languages
 
-## 1. Creating your test environment ##
+
+## 1. Running the app 100% locally without any server setup ##
+
+You can run the application locally from your computer without setting up any
+server-based resources as described in the items below. Saving and sharing
+wheels won't work, but it may be enough if you want to run the application
+without hosting it online. Here is how to do it:
+
+1. Clone the repo
+1. Run ```npm install```
+1. Run ```build_dev.sh``` [or do the Windows equivalent]
+1. Run ```npx serve ./dist``` [or any static file server like http-server or
+caddy]
+
+
+## 2. Creating your test environment ##
 
 You will first create a project for your test environment. This will let you
 run your code on your local machine, and deploy to a test environment in the
@@ -191,7 +207,7 @@ your code to your test environment in the cloud.
     Go to that URL to use the application in your test environment in the cloud.
 
 
-## 2. Creating your production environment ##
+## 3. Creating your production environment ##
 
 ### Create and configure projects ###
 
@@ -264,7 +280,7 @@ app is a Progressive Web App, with client-side caching meant to maximize
 performance.
 
 
-## 3. Configuring advanced functionality ##
+## 4. Configuring advanced functionality ##
 
 ### Enable traffic reporting with Google Analytics ###
 
@@ -368,7 +384,7 @@ success or failure of the jobs.
 
 
 
-## 4. Adding gallery images, sound effects, and languages ##
+## 5. Adding gallery images, sound effects, and languages ##
 
 ### Adding gallery images ###
 
