@@ -1,0 +1,1 @@
+firebase deploy --only=firestore --project=test

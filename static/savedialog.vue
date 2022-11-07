@@ -26,21 +26,12 @@ limitations under the License.
           <p>
             {{ $t('savedialog.To save wheels') }}
           </p>
+          <div id="auth-container"></div>
         </section>
         <footer class="modal-card-foot" style="justify-content:flex-end">
           <b-button @click="enter_inactive()">
             {{ $t('common.Cancel') }}
           </b-button>
-          <input type="image" style="height:40px; margin-right:10px"
-            alt="Sign in with Google"
-            src="/images/btn_google_signin_dark_normal_web@2x.png"
-            @click="enter_userIsLoggingIn('Google')"
-          >
-          <input type="image"
-            alt="Sign in with Twitter"
-            src="/images/sign-in-with-twitter-gray.png.img.fullhd.medium.png"
-            @click="enter_userIsLoggingIn('Twitter')"
-          >
         </footer>
       </div>
     </b-modal>
@@ -64,7 +55,7 @@ limitations under the License.
               {{ $t('savedialog.Save as') }}
             </div>
             <div class="column">
-              <b-input v-model="saveAsName" @keyup.native.enter="enter_savingWheel" ref="saveAsField" required maxlength="100"></b-input>
+              <b-input v-model="saveAsName" @keyup.native.enter="enter_savingWheel" ref="saveAsField" required maxlength="50"></b-input>
             </div>
           </div>
           <div class="columns">
@@ -74,7 +65,7 @@ limitations under the License.
             <div class="column">
               <b-select :placeholder="$t('savedialog.Select a wheel')" v-model="existingWheelTitle" expanded>
                 <option
-                  v-for="wheel in wheels"
+                  v-for="wheel in savedWheels"
                   :value="wheel.title"
                   :key="wheel.title">
                   {{ wheel.title }}
@@ -82,6 +73,7 @@ limitations under the License.
               </b-select>
             </div>
           </div>
+          <p>{{ $t('savedialog.You will always be able to access') }}</p>
         </section>
         <footer class="modal-card-foot" style="justify-content:flex-end">
           <b-button size="is-medium" @click="enter_inactive()">
@@ -97,27 +89,21 @@ limitations under the License.
 </template>
 
 <script>
-  import * as Firebase from './Firebase.js';
   import * as Util from './Util.js';
   import WheelConfig from './WheelConfig.js';
   import profiledropdown from './profiledropdown.vue';
-  import * as ServerFunctions from './ServerFunctions.js';
-  import './images/btn_google_signin_dark_normal_web@2x.png';
-  import './images/sign-in-with-twitter-gray.png.img.fullhd.medium.png';
+  import { mapGetters } from "vuex";
 
   export default {
     components: { profiledropdown },
     data() {
       return {
-        wheels: [], fsm: 'inactive', saveAsName: '', existingWheelTitle: null
+        fsm: 'inactive', saveAsName: '', existingWheelTitle: null
       }
     },
     computed: {
       saveAsNameIsValid() {
         return this.saveAsName.length > 0;
-      },
-      uid() {
-        return this.$store.state.appStatus.userUid
       },
       displayLoginDialog: {
         get: function() {
@@ -135,6 +121,9 @@ limitations under the License.
           if (newValue == false) this.fsm = 'inactive';
         }
       },
+      ...mapGetters([
+        'savedWheels', 'wheelConfig', 'wheelTitle'
+      ])
     },
     watch: {
       existingWheelTitle(newValue, oldValue) {
@@ -143,64 +132,57 @@ limitations under the License.
     },
     methods: {
       async show() {
-        if (this.$store.state.wheelConfig.isTooBigForDatabase()) {
+        if (this.wheelConfig.isTooBigForDatabase()) {
+          Util.trackEvent('Wheel', 'WheelTooBigForDatabase', '');
           alert(this.$t('savedialog.Sorry, too many images'));
           return;
         }
+        this.saveAsName = this.wheelTitle;
         this.enter_loadingLibraries();
       },
       async enter_loadingLibraries() {
         this.fsm = 'loadingLibraries';
-        this.$emit('start-wait-animation');
-        await Firebase.loadLibraries();
-        if (await Firebase.userIsLoggedIn()) {
-          const user = await Firebase.getLoggedInUser();
-          this.$store.commit('logInUser', {
-            photoUrl: user.photoURL, displayName: user.displayName, uid: user.uid
-          });
-          this.$emit('stop-wait-animation');
-          this.enter_loadingWheels();
+        try {
+          this.$emit('start-wait-animation');
+          const userIsLoggedIn = await this.$store.dispatch('userIsLoggedIn');
+          if (userIsLoggedIn) {
+            this.enter_loadingWheels();
+          }
+          else {
+            this.enter_userIsPickingLoginMethod();
+          }
         }
-        else {
+        catch(ex) {
+          this.enter_authError(ex);
+        }
+        finally {
           this.$emit('stop-wait-animation');
-          this.enter_userIsPickingLoginMethod();
         }
       },
       enter_inactive() {
         this.fsm = 'inactive';
       },
-      enter_userIsPickingLoginMethod() {
+      async enter_userIsPickingLoginMethod() {
         this.fsm = 'userIsPickingLoginMethod';
-      },
-      async enter_userIsLoggingIn(providerName) {
-        this.fsm = 'userIsLoggingIn';
-        try {
-          Util.trackEvent('Wheel', `LoginForSaveAttempt-${providerName}`, '');
-          this.$emit('start-wait-animation');
-          const user = await Firebase.logIn(providerName, this.$i18n.locale);
-          this.$store.commit('logInUser', {
-            photoUrl: user.photoURL, displayName: user.displayName, uid: user.uid
-          });
-          await ServerFunctions.convertAccount(await user.getIdToken());
-          this.$emit('stop-wait-animation');
-          Util.trackEvent('Wheel', `LoginForSaveSuccess-${providerName}`, '');
-          this.enter_loadingWheels();
-        }
-        catch (ex) {
-          this.$emit('stop-wait-animation');
-          Util.trackException(ex, {op: `LoginForSaveFailure-${providerName}`});
-          Util.trackEvent('Wheel', `LoginForSaveFailure-${providerName}`, ex.toString());
-          this.enter_authError(ex);
-        }
+        this.$nextTick(async function() {
+          try {
+            Util.displayWindowsRtWarning();
+            Util.trackEvent('Wheel', `LoginForSaveAttempt`, '');
+            await this.$store.dispatch('loginWithUi', 'auth-container');
+            Util.trackEvent('Wheel', `LoginForSaveSuccess`, '');
+            this.enter_loadingWheels();
+          }
+          catch (ex) {
+            Util.trackEvent('Wheel', `LoginForSaveFailure`, ex.toString());
+            this.enter_authError(ex);
+          }
+        })
       },
       async enter_loadingWheels() {
         this.fsm = 'loadingWheels';
-        this.$emit('start-wait-animation');
-        this.wheels = [''].concat(await Firebase.getWheels(this.uid));
-        this.$emit('stop-wait-animation');
+        this.$store.dispatch('loadSavedWheels');
         this.existingWheelTitle = null;
-        this.saveAsName = this.$store.state.wheelConfig.title;
-        Firebase.logUserActivity(this.uid);
+        this.saveAsName = this.wheelConfig.title || 'My wheel';
         setTimeout(() => { this.$refs.saveAsField.focus() }, 100);
         this.enter_userIsEnteringName();
       },
@@ -210,15 +192,15 @@ limitations under the License.
       async enter_savingWheel() {
         this.fsm = 'savingWheel';
         this.$store.commit('setWheelTitle', this.saveAsName);
-        const saveValues = this.$store.state.wheelConfig.getValues();
         try {
           this.$emit('start-wait-animation');
-          await Firebase.saveWheel(this.uid, saveValues);
+          await this.$store.dispatch('saveWheel', this.wheelConfig);
           this.$emit('stop-wait-animation');
           const message = this.$t('savedialog.Wheel saved successfully',
-              {wheelTitle: Util.getHtmlAsText(this.saveAsName)}
+              {wheelTitle: Util.removeHtml(this.saveAsName)}
           );
           this.$emit('show-snackbar-message', message);
+          this.$emit('reset-address-bar');
           this.enter_inactive();
         }
         catch(ex) {
@@ -229,8 +211,7 @@ limitations under the License.
       },
       enter_authError(exception) {
         this.fsm = 'authError';
-        Firebase.logOut();
-        this.$store.commit('logOutUser');
+        this.$store.dispatch('logOut');
         this.$emit('auth-error', exception);
         this.enter_inactive();
       }

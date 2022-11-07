@@ -29,6 +29,9 @@ limitations under the License.
           <p style="margin-top:10px">
             {{ $t('sheetdialog.To import sheets') }}
           </p>
+          <p style="margin-top:10px; color:#999">
+            {{ $t('common.If you dont see a Google login button below') }}
+          </p>
         </section>
         <footer class="modal-card-foot" style="justify-content:flex-end">
           <b-button @click="enter_inactive()">
@@ -110,10 +113,10 @@ limitations under the License.
 
 <script>
   import * as SheetGateway from './SheetGateway.js';
-  import * as Firebase from './Firebase.js';
   import * as SheetPicker from './SheetPicker.js';
   import * as Util from './Util.js';
   import profiledropdown from './profiledropdown.vue';
+  import { mapGetters } from "vuex";
   import './images/btn_google_signin_dark_normal_web@2x.png';
 
   export default {
@@ -127,11 +130,7 @@ limitations under the License.
         sheetLinkedAtMs: 0, timeoutId: 0
       }
     },
-    computed:
-    {
-      sheetLinked() {
-        return this.$store.state.appStatus.sheetLinked;
-      },
+    computed: {
       displayLoginDialog: {
         get: function() {
           return this.fsm=='userIsPickingLoginMethod';
@@ -150,7 +149,8 @@ limitations under the License.
       },
       linkSheetButtonEnabled() {
         return (this.selectedTab && this.selectedColumn);
-      }
+      },
+      ...mapGetters(['sheetLinked', 'wheelConfig'])
     },
     watch: {
       async selectedTab(newValue) {
@@ -169,18 +169,11 @@ limitations under the License.
     },
     methods: {
       show() {
-        this.enter_loadingLibraries();
+        this.enter_userIsPickingLoginMethod();
       },
       enter_inactive() {
         this.setState('inactive');
         this.$store.commit('unlinkSheet');
-      },
-      async enter_loadingLibraries() {
-        this.setState('loadingLibraries');
-        this.$emit('start-wait-animation');
-        await Firebase.loadLibraries();
-        this.$emit('stop-wait-animation');
-        this.enter_userIsPickingLoginMethod();
       },
       enter_userIsPickingLoginMethod() {
         this.setState('userIsPickingLoginMethod');
@@ -189,12 +182,9 @@ limitations under the License.
         this.setState('userIsLoggingIn');
         try {
           Util.trackEvent('Wheel', 'LoginForSheetAttempt', '');
-          const accessToken = await Firebase.logInToSheets(this.$i18n.locale);
+          const locale = this.$i18n.locale;
+          const accessToken = await this.$store.dispatch('logInToSheets', locale);
           await SheetPicker.load(accessToken);
-          const user = await Firebase.getLoggedInUser();
-          this.$store.commit('logInUser', {
-            photoUrl: user.photoURL, displayName: user.displayName, uid: user.uid
-          });
           Util.trackEvent('Wheel', 'LoginForSheetSuccess', '');
           this.enter_userIsPickingSheet();
         }
@@ -222,9 +212,10 @@ limitations under the License.
         this.selectedColumn = null;
         this.tabs = await SheetGateway.getTabNames(this.sheetId);
       },
-      enter_linkingSheet() {
+      async enter_linkingSheet() {
         this.setState('linkingSheet');
         Util.trackEvent('Wheel', 'LinkSpreadsheet', '');
+        await this.$store.dispatch('setAdvanced', false);
         this.$store.commit('linkSheet');
         this.sheetLinkedAtMs = new Date().getTime();
         this.enter_readingSheet();
@@ -235,10 +226,13 @@ limitations under the License.
           const sheetEntries = await SheetGateway.getEntries(this.sheetId,
             this.selectedTab, this.selectedColumn, this.firstRowIsHeader
           );
-          const cleanedEntries = sheetEntries.map(x => Util.getHtmlAsText(x));
-          const newEntries = Util.getAddedEntries(this.$store.state.wheelConfig.names, cleanedEntries);
-          this.notifyUserOfNewEntries(newEntries);
-          this.$store.commit('setNames', cleanedEntries);
+          const cleanedEntries = sheetEntries.map(x => Util.removeHtml(x));
+          const newTextEntries = Util.getAddedTextEntries(
+            this.wheelConfig.entries.map(e => e.text),
+            cleanedEntries
+          );
+          this.notifyUserOfNewEntries(newTextEntries);
+          this.$store.commit('setTextEntries', cleanedEntries);
           this.enter_waitingToReadSheet();
         }
         catch (ex) {
@@ -261,12 +255,11 @@ limitations under the License.
       },
       enter_authError(exception) {
         this.setState('authError');
-        Firebase.logOut();
+        this.$store.dispatch('logOut');
         this.$emit('auth-error', exception);
         this.enter_inactive();
       },
       setState(newState) {
-        // console.log(`${this.fsm} => ${newState}`);
         this.fsm = newState;
       },
       linkHasTimedOut() {
@@ -281,7 +274,7 @@ limitations under the License.
         }
         else {
           newEntries.forEach(entry => {
-            const msg = this.$t('sheetdialog.added', {entry: Util.getHtmlAsText(entry)});
+            const msg = this.$t('sheetdialog.added', {entry: Util.removeHtml(entry)});
             this.$emit('show-snackbar-message', msg);
           })
         }

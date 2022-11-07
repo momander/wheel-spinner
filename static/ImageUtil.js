@@ -19,7 +19,7 @@ export async function optimizeSliceImage(dataUrl) {
     image.onload = function() {
       const canvas = createProportionalCanvas(image.width, image.height, 200);
       drawStretched(canvas, image);
-      resolve(getOptimizedDataUrl(canvas, dataUrl));
+      resolve(getOptimizedDataUrl(canvas, dataUrl, 0.5));
     }
     image.src = dataUrl;
   })
@@ -33,17 +33,29 @@ export async function optimizeCenterImage(dataUrl) {
       if (!topLeftIsWhiteOrTransparent(image)) {
         drawStretched(canvas, image, 'blur(4px)');
       }
-      drawProportionalOnSquareCanvas(canvas, image);
-      resolve(getOptimizedDataUrl(canvas));
+      drawProportionalOnSquareCanvas(canvas, image, true);
+      resolve(getOptimizedDataUrl(canvas, null, 0.5));
     }
     image.src = dataUrl;
   })
 }
 
-export function createInMemoryImage(width, height) {
+export async function optimizeCoverImage(dataUrl) {
+  return new Promise(function(resolve, reject) {
+    const image = new Image();
+    image.onload = function() {
+      const canvas = createSquareCanvas(700);
+      drawProportionalOnSquareCanvas(canvas, image, false);
+      resolve(getOptimizedDataUrl(canvas, null, 0.7));
+    }
+    image.src = dataUrl;
+  })
+}
+
+export function createInMemoryImage(context) {
   const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = width;
-  tempCanvas.height = height;
+  tempCanvas.width = context.canvas.width;
+  tempCanvas.height = context.canvas.height;
   return tempCanvas;
 }
 
@@ -86,6 +98,48 @@ export async function extractColors(dataUri) {
       ]);
     }
   })
+}
+
+export function renderText(text) {
+  const canvasSize = 300;
+  const canvas = createSquareCanvas(canvasSize);
+  const context = canvas.getContext('2d');
+  context.fillStyle = 'white';
+  context.fillRect(0, 0, canvasSize, canvasSize);
+  context.fillStyle = 'black';
+  context.textBaseline = 'middle';
+  context.textAlign = 'center';
+  const maxWidth = canvasSize * 0.9;
+  setLargestFittingFont(context, text, maxWidth);
+  context.fillText(text, canvasSize/2, canvasSize/2, maxWidth);
+  const newDataUrl = canvas.toDataURL('image/webp', 0.5);
+  return newDataUrl;
+}
+
+export function getImageFromData(imageData) {
+  if (imageData) {
+    return new Promise(async function(resolve) {
+      const image = new Image();
+      image.setAttribute('crossOrigin', 'anonymous');
+      image.onload = (function() {
+        resolve(image);
+      });
+      image.src = imageData;
+    });
+  }
+}
+
+export function topLeftIsFullyTransparent(image) {
+  const hexColor = getTopLeftColor(image);
+  return (hexColor.slice(7)=='00');
+}
+
+function setLargestFittingFont(context, text, maxWidth) {
+  for (let fontSize=Math.round(maxWidth/2); fontSize>=maxWidth/20; fontSize--) {
+    context.font = `${fontSize}px Quicksand, sans-serif`;
+    const textSize = context.measureText(text);
+    if (textSize.width <= maxWidth) break;
+  }
 }
 
 function createProportionalCanvas(imageWidth, imageHeight, maxSide) {
@@ -136,9 +190,12 @@ function drawStretched(canvas, image, filter) {
   context.restore();
 }
 
-function drawProportionalOnSquareCanvas(canvas, image) {
+function drawProportionalOnSquareCanvas(canvas, image, letterboxed) {
   const canvasWidth = canvas.width;
-  const scale = canvasWidth / Math.max(image.width, image.height);
+  let scale = canvasWidth / Math.min(image.width, image.height);
+  if (letterboxed) {
+    scale = canvasWidth / Math.max(image.width, image.height);
+  }
   const width = image.width * scale;
   const x = (canvasWidth - width) / 2;
   const height = image.height * scale;
@@ -147,13 +204,13 @@ function drawProportionalOnSquareCanvas(canvas, image) {
   context.drawImage(image, x, y, width, height);
 }
 
-function getOptimizedDataUrl(canvas, originalDataUrl) {
+function getOptimizedDataUrl(canvas, originalDataUrl, jpegCompressionFactor) {
   let newDataUrl;
   if (topLeftIsTransparent(canvas.getContext("2d"))) {
-    newDataUrl = canvas.toDataURL('image/png');
+    newDataUrl = canvas.toDataURL('image/webp', 0.5);
   }
   else {
-    newDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+    newDataUrl = canvas.toDataURL('image/jpeg', jpegCompressionFactor);
   }
   if (originalDataUrl && originalDataUrl.length<newDataUrl.length) {
     return originalDataUrl;

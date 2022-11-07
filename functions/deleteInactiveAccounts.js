@@ -24,7 +24,7 @@ app.get('/', async (req, res) => {
   const db = admin.firestore();
   let deletions = 0;
   while (true) {
-    const querySnapshot = await getAccounts(db, getDaysAgo(180));
+    const querySnapshot = await getAccounts(db, getDaysAgo(366));
     await deleteAccountsAndWheels(db, querySnapshot);
     deletions += querySnapshot.size;
     if (querySnapshot.size==0 || deletions>=300) break;

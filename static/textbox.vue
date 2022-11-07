@@ -14,56 +14,52 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div id="names" class="textarea can-go-dark" spellcheck="false"
-       :style="'height:' + ($store.state.preferences.appInfoVisible ? '380px' : '520px')"
-       style="overflow: auto; font-family: BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;"
-       contentEditable="true" v-on:paste="onPaste" v-on:input="setNames()"
-       v-on:keyup="IE_setNames"></div>
+  <div id="entries" class="textarea can-go-dark basic-editor has-fixed-size" spellcheck="false"
+       contentEditable="true" v-on:paste="onPaste" v-on:input="setEntries()"
+       v-on:keyup="IE_setEntries"></div>
 </template>
 
 <script>
   import * as Util from './Util.js';
+  import { mapGetters } from "vuex";
 
   export default {
     data() {
       return {updateTriggeredByMe: false}
     },
+    mounted() {
+      // This textbox may have been just created by a v-if and may not get
+      // the initial list of entries in watch.
+      this.setTextboxContents(this.entries);
+    },
     computed: {
-      names() {
-        return this.$store.state.wheelConfig.names;
+      entries() {
+        return this.wheelConfig.entries;
       },
-      wheelConfig() {
-        return this.$store.state.wheelConfig;
-      },
-      wheelSpinning() {
-        return this.$store.state.appStatus.wheelSpinning;
-      },
-      sheetLinked() {
-        return this.$store.state.appStatus.sheetLinked;
-      },
+      ...mapGetters([
+        'wheelConfig', 'wheelIsBusy', 'sheetLinked', 'appInfoVisible'
+      ])
     },
     watch: {
-      names(newValue, oldValue) {
+      entries(newEntries) {
         if (this.updateTriggeredByMe) {
           this.updateTriggeredByMe = false;
         }
         else {
-          const div = document.getElementById('names');
-          div.innerHTML = newValue.map(name => `<div>${name}</div>`).join('');
+          this.setTextboxContents(newEntries);
         }
       },
-      wheelConfig(newValue, oldValue) {
-        const div = document.getElementById('names');
-        div.innerHTML = newValue.names.map(name => `<div>${name}</div>`).join('');
+      wheelConfig(newConfig) {
+        this.setTextboxContents(newConfig.entries);
       },
-      wheelSpinning(isSpinning) {
-        const editable = !isSpinning;
-        const textBoxDiv = document.getElementById('names');
+      wheelIsBusy(isBusy) {
+        const editable = !isBusy;
+        const textBoxDiv = document.getElementById('entries');
         textBoxDiv.setAttribute('contenteditable', editable);
       },
       sheetLinked(isLinked) {
         const editable = !isLinked;
-        const textBoxDiv = document.getElementById('names');
+        const textBoxDiv = document.getElementById('entries');
         textBoxDiv.setAttribute("contenteditable", editable);
         if (isLinked) {
           textBoxDiv.style.backgroundImage = "url('/images/link.png')";
@@ -76,32 +72,23 @@ limitations under the License.
       }
     },
     methods: {
-      setNames() {
+      setEntries() {
         this.updateTriggeredByMe = true;
         const entries = this.getEntries();
-        this.$store.commit('setNames', entries);
+        this.$store.commit('setEntries', entries);
       },
-      IE_setNames() {
+      IE_setEntries() {
         if (Util.browserIsIE()) {
-          this.setNames();
+          this.setEntries();
         }
       },
       getEntries() {
-        const div = document.getElementById('names');
-        const html = div.innerHTML;
-        return this.getEntriesFromHtml(html);
+        const div = document.getElementById('entries');
+        return Util.getEntriesFromHtml(div.innerHTML);
       },
-      getEntriesFromHtml(html) {
-        if (!html) return [];
-        let rows = html.split(/<div>|<br>|<p>/);
-        let junks = ['</div>', '<br>', '</p>', /<span.*?>/, '</span>'];
-        return rows.map(row => {
-          let retVal = row;
-          junks.forEach(junk => {
-            retVal = retVal.replace(junk, '');
-          })
-          return retVal;
-        }).filter(entry => (entry != ''));
+      setTextboxContents(entries) {
+        const div = document.getElementById('entries');
+        div.innerHTML = entries.map(entry => Util.renderEntry(entry)).join('');
       },
       onPaste(e) {
         // Intercept paste into the text-box. Transform rich text into plain text,
@@ -109,6 +96,7 @@ limitations under the License.
         e.preventDefault();
         Util.trackEvent('Wheel', 'PasteIntoTextbox', '');
         if (e.clipboardData) {
+          // Modern browsers.
           let html = (e.originalEvent || e).clipboardData.getData('text/html');
           let match = html.match(/(<.*?src="data:image.*?>)/);
           if (match) {
@@ -120,12 +108,25 @@ limitations under the License.
           }
         }
         else {
+          // Internet Explorer.
           const clipboardData = window.clipboardData.getData('text');
           if (clipboardData) {
-            this.$store.commit('appendNames', clipboardData.split(/\n/));
+            this.$store.commit('appendTextEntries', clipboardData.split(/\n/));
           }
         }
       }
     }
   }
 </script>
+
+<style scoped>
+  .basic-editor {
+    flex-grow: 1;
+    overflow: auto;
+    font-family: BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+                 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                 'Helvetica', 'Arial', sans-serif;
+    height: 300px;
+    max-height: 2000px;
+  }
+</style>

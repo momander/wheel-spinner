@@ -15,7 +15,7 @@ limitations under the License.
 */
 export async function userIsLoggedIn(auth) {
   const user = await getLoggedInUser(auth);
-  return !!user;
+  return !!user && !user.isAnonymous;
 }
 
 export async function getLoggedInUser(auth) {
@@ -34,6 +34,11 @@ export async function getLoggedInUser(auth) {
 export async function logIn(auth, provider) {
   provider.setCustomParameters({ prompt: 'select_account' });
   await auth.signInWithPopup(provider);
+  return auth.currentUser;
+}
+
+export async function logInAnonymously(auth) {
+  await auth.signInAnonymously()
   return auth.currentUser;
 }
 

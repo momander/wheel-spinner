@@ -17,18 +17,17 @@ const path = require('path');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const AsyncCssPlugin = require("async-css-plugin");
 const {GenerateSW} = require('workbox-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 module.exports = {
   devtool: 'source-map',
+  target: ['web', 'es5'],
   entry: {
     polyfill: '@babel/polyfill',
     index: './static/index.js',
-    view: './static/view.js',
-    faq: './static/faq.js',
-    view_account: './static/view-account.js',
-    admin: './static/admin/index.js',
+    shared_wheel: './static/index.js',
   },
   output: {
     filename: '[name]-[contenthash].js',
@@ -86,7 +85,7 @@ module.exports = {
         }]
       },
       {
-        test: /\.(png|jpg|gif|ico)$/,
+        test: /\.(png|jpg|jpeg|gif|ico)$/,
         use: [
           {
             loader: 'file-loader',
@@ -124,36 +123,24 @@ module.exports = {
       filename: './index.html',
       chunks: ['index', 'vendor']
     }),
+    new AsyncCssPlugin(),
     new HtmlWebpackPlugin({
-      template: './static/view.html',
-      filename: './view.html',
-      chunks: ['view', 'vendor']
-    }),
-    new HtmlWebpackPlugin({
-      template: './static/faq.html',
-      filename: './faq.html',
-      chunks: ['faq', 'vendor']
-    }),
-    new HtmlWebpackPlugin({
-      template: './static/view-account.html',
-      filename: './view-account.html',
-      chunks: ['view_account', 'vendor']
-    }),
-    new HtmlWebpackPlugin({
-      template: './static/admin/index.html',
-      filename: './admin.html',
-      chunks: ['admin', 'vendor']
+      template: './static/shared_wheel.html',
+      filename: './shared-wheel.html',
+      chunks: ['index', 'vendor']
     }),
     new CopyWebpackPlugin({patterns: [
+      { from: './static/third_party', to: 'third_party' },
       { from: './static/manifest.json', to: '.' },
-      { from: './static/images/favicon.ico', to: '.' },
-      { from: './static/404.html', to: '.' },
+      { from: './static/images/favicon.ico', to: '.' }
     ]}),
     new GenerateSW({
       exclude: [
-        /\.map$/, /\.png$/, /\.mp3$/, /\.xml$/, /\.ico$/,
+        /\.map$/, /\.png$/, /\.jpg$/, /\.mp3$/, /\.xml$/, /\.ico$/,
         /faq/, /privacy/, /translate/, /404/, /vendors~/, /^locale/,
-        /admin/, /view/, /index/, /polyfill/, /precache/, /vendor/
+        /admin/, /index/, /classroom/, /tutorials/, /polyfill/, /precache/,
+        /vendor/, /view/, /e628cc/, /shared/, /carousel/, /notFound/, /export/,
+        /firebase/, /howler/, /translations/, /vibrant/, /workbox/
       ],
       skipWaiting: true,
       clientsClaim: true,

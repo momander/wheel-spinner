@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 exports.list = [
-  {fileName: './images/camera.png', title: 'Camera'},
-  {fileName: './images/cat.png', title: 'Cat'},
-  {fileName: './images/dog.png', title: 'Dog'},
-  {fileName: './images/dollar-sign.png', title: 'Dollar sign'},
-  {fileName: './images/dragon.png', title: 'Dragon'},
+  {fileName: "/third_party/publicdomainvectors/camera.png", title: "Camera"},
+  {fileName: "/third_party/publicdomainvectors/cat.png", title: "Cat"},
+  {fileName: "/third_party/publicdomainvectors/dog.png", title: "Dog"},
+  {fileName: "/third_party/publicdomainvectors/dollar-sign.png", title: "Dollar sign"},
+  {fileName: "/third_party/publicdomainvectors/dragon.png", title: "Dragon"},
 ]

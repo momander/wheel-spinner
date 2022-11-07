@@ -1,6 +1,6 @@
 {
   "short_name": "Wheel",
-  "name": "Wheel Spinner",
+  "name": "...",
   "icons": [
     {
       "src": "images/icon_192.png",
@@ -13,7 +13,7 @@
       "type": "image/png"
     }
   ],
-  "start_url": "https://XXXX/?utm_source=web-manifest&utm_medium=pwa&utm_campaign=pwa",
+  "start_url": "https://...",
   "display": "fullscreen",
   "orientation": "any",
   "background_color": "#FFFFFF",

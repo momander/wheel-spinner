@@ -1,5 +1,5 @@
 {
-  "name": "wheel-of-names",
+  "name": "wheel-spinner",
   "version": "1.0.0",
   "description": "This README explains how to install the app and get it running. If you don't want to install it yourself, you can always use the copy running at [wheelofnames.com](https://wheelofnames.com).",
   "private": true,
@@ -8,38 +8,40 @@
     "buefy": "^0.8.20",
     "canvas-confetti": "^1.2.0",
     "circletype": "^2.3.0",
+    "core-js": "^3.20.2",
+    "fg-loadcss": "^3.1.0",
     "firebase": "^7.19.1",
+    "firebaseui": "^4.7.3",
     "howler": "^2.2.0",
-    "logrocket": "^1.0.12",
-    "logrocket-vuex": "0.0.3",
     "node-vibrant": "^3.1.5",
+    "regenerator-runtime": "^0.13.9",
     "vue": "^2.6.12",
-    "vue-a2b": "^0.2.2",
     "vue-i18n": "^8.21.0",
     "vue-mq": "^1.0.1",
+    "vue-router": "^3.5.2",
     "vuex": "^3.5.1",
-    "vuexfire": "^3.2.4",
     "whatwg-fetch": "^3.4.1",
-    "workbox-webpack-plugin": "^5.1.3"
+    "workbox-webpack-plugin": "^6.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.11.6",
     "@babel/preset-env": "^7.11.5",
     "@babel/register": "^7.11.5",
+    "async-css-plugin": "^1.1.5",
     "babel-loader": "^8.1.0",
     "cloc": "^2.6.0",
     "copy-webpack-plugin": "^6.1.0",
     "css-loader": "^4.2.2",
     "dotenv-webpack": "^2.0.0",
     "file-loader": "^6.1.0",
-    "html-webpack-plugin": "^4.4.1",
+    "html-webpack-plugin": "^5.5.0",
     "mini-css-extract-plugin": "^0.11.0",
     "mocha": "^8.1.3",
     "style-loader": "^1.2.1",
     "vue-loader": "^15.9.3",
     "vue-template-compiler": "^2.6.12",
-    "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12",
+    "webpack": "^5.60.0",
+    "webpack-cli": "^4.9.1",
     "webpack-merge": "^5.1.3"
   },
   "scripts": {
@@ -47,10 +49,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://momander@bitbucket.org/momander/wheel-of-names.git"
+    "url": "git+https://github.com/momander/wheel-spinner.git"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "homepage": "https://bitbucket.org/momander/wheel-of-names#readme"
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/momander/wheel-spinner#readme"
 }

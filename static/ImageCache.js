@@ -13,25 +13,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import './images/none.png';
 import './third_party/publicdomainvectors/camera.png';
 import './third_party/publicdomainvectors/cat.png';
 import './third_party/publicdomainvectors/dog.png';
 import './third_party/publicdomainvectors/dollar-sign.png';
 import './third_party/publicdomainvectors/dragon.png';
+import './images/none.png';
 
-export default function ImageCache() {
-  this.images = new Object();
-  this.emptyImage = new Image();
-  // This dataUrl is a 1x1 transparent image.
-  this.emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+export default class ImageCache {
 
-  this.addImage = function(imageName) {
+  constructor() {
+    this.images = new Object();
+    this.emptyImage = new Image();
+    // This dataUrl is a 1x1 transparent image.
+    this.emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+  }
+
+  addImage(imageName) {
     this.images[imageName] = new Image();
     this.images[imageName].src = imageName;
   }
 
-  this.getImage = function(imageName) {
+  getImage(imageName) {
+    if (!imageName) return;
     if (imageName in this.images) {
       // Do nothing.
     }

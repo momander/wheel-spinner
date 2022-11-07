@@ -7,46 +7,16 @@
   },
   "hosting": {
     "public": "dist",
+    "redirects": [
+    ],
     "rewrites": [
       {
-        "source": "/[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]-[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]",
+        "source": "**/[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]-[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]",
+        "destination": "/shared-wheel.html"
+      },
+      {
+        "source": "**",
         "destination": "/index.html"
-      },
-      {
-        "source": "/[a-z][a-z]/[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]-[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]",
-        "destination": "/index.html"
-      },
-      {
-        "source": "/[a-z][a-z][a-z]/[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]-[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]",
-        "destination": "/index.html"
-      },
-      {
-        "source": "/[a-z][a-z]-[A-Z][A-Z]/[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]-[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]",
-        "destination": "/index.html"
-      },
-      {
-        "source": "/[a-z][a-z]",
-        "destination": "/index.html"
-      },
-      {
-        "source": "/[a-z][a-z][a-z]",
-        "destination": "/index.html"
-      },
-      {
-        "source": "/[a-z][a-z]-[A-Z][A-Z]",
-        "destination": "/index.html"
-      },
-      {
-        "source": "/view/**",
-        "destination": "/view.html"
-      },
-      {
-        "source": "/faq",
-        "destination": "/faq.html"
-      },
-      {
-        "source": "/faq/*",
-        "destination": "/faq.html"
       }
     ],
     "ignore": [

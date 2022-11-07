@@ -16,17 +16,37 @@ limitations under the License.
 <template>
   <b-navbar type='is-info'>
     <template slot="brand">
-      <b-navbar-item style="font-size:24px" href="/">
+      <b-navbar-item style="font-size:24px" @click="goBackToMainPage">
         <i class="fa fa-arrow-left"></i>&nbsp;{{toolbarBrand}}
+      </b-navbar-item>
+    </template>
+    <template slot="end">
+      <b-navbar-item @click="openFeedbackForm">
+        <i class="fa fa-comment fa-fw"></i>&nbsp;Feedback
       </b-navbar-item>
     </template>
   </b-navbar>
 </template>
 
 <script>
+  import * as Util from './Util.js';
+  import { mapGetters } from "vuex";
+
   export default {
     data() {
       return {toolbarBrand: window.location.host};
+    },
+    computed: {
+      ...mapGetters(['version'])
+    },
+    methods: {
+      goBackToMainPage() {
+        this.$router.push(`/${Util.getNonEnglishLocale(this.$i18n.locale)}`);
+      },
+      openFeedbackForm() {
+        const url = Util.getFeedbackFormUrl(navigator.userAgent, this.version);
+        window.open(url, '_new');
+      }
     }
   }
 </script>

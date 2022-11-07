@@ -68,3 +68,11 @@ exports.getRandomInt = function(min, max) {
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+exports.getUidFromAuthHeader = async function(authHeader) {
+  if (authHeader) {
+    // Rejects the promise if the auth header can't be verified.
+    const token = await admin.auth().verifyIdToken(authHeader);
+    return token.uid;
+  }
+}

@@ -13,34 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import '@babel/polyfill';
+import "core-js/stable";
+import "regenerator-runtime/runtime";
 
-let getHtmlAsTextCache = {};
-
-export function getHtmlAsText(html) {
-  if (!(html in getHtmlAsTextCache)) {
-    let retVal;
-    try {
-      let doc = new DOMParser().parseFromString(html, "text/html");
-      retVal = doc.documentElement.textContent;
-    }
-    catch (e) {
-      let replacements = [
-        ['&amp;', '&'],
-        ['&nbsp;', ' '],
-        ['&lt;', '<'],
-        ['&gt;', '>'],
-      ]
-      retVal = html;
-      replacements.forEach(element => {
-        let re = new RegExp(element[0], 'g');
-        retVal = retVal.replace(re, element[1]);
-      });
-    }
-    getHtmlAsTextCache[html] = retVal;
-  }
-  return getHtmlAsTextCache[html];
-}
 
 export function browserCanHandlePersistance(userAgent) {
   // Exclude iOS 12.2 due to a bug in that OS:
@@ -64,26 +39,84 @@ export function boxFits(a, r, b, w, h) {
   return d >= w;
 }
 
-export function extractDisplayText(entry, shorten) {
+export function extractText(entry) {
   if (entry) {
     let match = entry.match(/<img.*?src="(.*?)".*?>/);
     if (match) {
       entry = entry.replace(match[0], '');
     }
   }
-  let displayText = '';
+  let retVal = '';
   if (entry) {
-    displayText = getHtmlAsText(entry);
-    if (shorten) {
-      const MAX_LENGTH = 18;
-      if (displayText.length > MAX_LENGTH) {
-        displayText = displayText.substring(0, MAX_LENGTH-1) + '…';
+    retVal = unescapeHtml(entry);
+  }
+  return retVal;
+}
+
+export function shortenText(text) {
+  let retVal = '';
+  if (text) {
+    retVal = text;
+    const MAX_LENGTH = 18;
+    if (retVal.length > MAX_LENGTH) {
+      retVal = retVal.substring(0, MAX_LENGTH-1) + '…';
+    }
+  }
+  return retVal;
+}
+
+export function dedupeEntries(allowDuplicates, entries) {
+  if (allowDuplicates) {
+    return entries;
+  }
+  else {
+    const entriesSeen = [];
+    const dedupedEntries = [];
+    for (let entry of entries) {
+      const serializedEntry = serializeTextAndImage(entry);
+      if (!entriesSeen.includes(serializedEntry)) {
+        entriesSeen.push(serializedEntry);
+        dedupedEntries.push(entry);
       }
     }
-    // Add font-proportional space between name and edges of wheel.
-    displayText = ' ' + displayText + ' ';
+    return dedupedEntries;
   }
-  return displayText;
+}
+
+function serializeTextAndImage(entry) {
+  const entryCopy = {};
+  if (entry.text) entryCopy.text = entry.text;
+  if (entry.image) entryCopy.image = entry.image;
+  return JSON.stringify(entryCopy);
+}
+
+export function entryIsDuplicate(entries, entry) {
+  const indexes = [];
+  for (let i = 0; i < entries.length; i++) {
+    if (serializeTextAndImage(entry) == serializeTextAndImage(entries[i])) {
+      indexes.push(i);
+    }
+    if (entry.id == entries[i].id) {
+      return indexes[0] != i;
+    }
+  }
+  return false;
+}
+
+export function getEntriesFromHtml(html) {
+  if (!html) return [];
+  let rows = html.split(/<div>|<\/div>|<br>|<p>/);
+  let junks = [
+    /<div.*?>/g, '</div>', /<p.*?>/g, '</p>', /<span.*?>/g, '</span>',
+    /<!--.*?>/g, /<br.*?>/g
+  ];
+  return rows.map(row => {
+    let rowHtml = row;
+    junks.forEach(junk => {
+      rowHtml = rowHtml.replace(junk, '');
+    })
+    return createEntry(extractText(rowHtml), extractImage(rowHtml));
+  }).filter(entry => (entry.text || entry.image));
 }
 
 export function extractImage(entry) {
@@ -97,6 +130,16 @@ export function extractImage(entry) {
   return imageData;
 }
 
+export function createEntry(text, image, color, weight, sound) {
+  const entry = {};
+  if (text) entry.text = text;
+  if (image) entry.image = image;
+  if (color) entry.color = color;
+  if (weight) entry.weight = weight;
+  if (sound) entry.sound = sound;
+  return entry;
+}
+
 export function shuffleArray(inputArray) {
   const array = inputArray.slice(0);
   for (var i = array.length - 1; i > 0; i--) {
@@ -108,14 +151,21 @@ export function shuffleArray(inputArray) {
   return array;
 }
 
-export function getOccurencesInArray(array, entry) {
-  return array.reduce(function(accumulator, currentValue) {
-    return accumulator + (currentValue == entry ? 1 : 0);
+export function getOccurences(allTexts, text) {
+  if (!text) return 0;
+  return allTexts.reduce(function(accumulator, currentValue) {
+    return accumulator + (currentValue.trim() == text.trim() ? 1 : 0);
   }, 0)
 }
 
 export function browserIsIE() {
   return !!window.document.documentMode;
+}
+
+export function browserIsIeOnWindowsRtTablet(userAgent) {
+  if (!userAgent) return false;
+  const re = new RegExp('Trident.*Tablet PC.*rv.11');
+  return !!userAgent.match(re);
 }
 
 export function browserIsIEOrOldEdge(userAgent) {
@@ -124,9 +174,16 @@ export function browserIsIEOrOldEdge(userAgent) {
   return !!userAgent.match(re);
 }
 
+export function platformSupportsFlags(navigator) {
+  const windows = navigator.platform && navigator.platform.includes('Win');
+  return !windows;
+}
+
 export function sortWheelEntries(entries) {
   return entries.slice(0).sort((a, b) => {
-    return a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' });
+    const stringA = a.text || '';
+    const stringB = b.text || '';
+    return stringA.localeCompare(stringB, 'en', { numeric: true, sensitivity: 'base' });
   })
 }
 
@@ -150,7 +207,7 @@ export function sanitizeWheelTitle(title) {
   return retVal;
 }
 
-export function getAddedEntries(oldEntries, newEntries) {
+export function getAddedTextEntries(oldEntries, newEntries) {
   if (!oldEntries) oldEntries = [];
   if (!newEntries) newEntries = [];
   return newEntries.filter(x => !oldEntries.includes(x));
@@ -176,6 +233,7 @@ export function trackEvent(eventCategory, eventAction, eventLabel) {
 }
 
 export function trackException(exception, extraData) {
+  // TODO: Log a Google Analytics event here?
   console.error(exception);
 }
 
@@ -188,19 +246,23 @@ export function escapeHtml(unsafe) {
        .replace(/'/g, "&#039;");
 }
 
+export function unescapeHtml(unsafe) {
+  return unsafe
+       .replace(/&amp;/g, '&')
+       .replace(/&lt;/g, '<')
+       .replace(/&gt;/g, '>')
+       .replace(/&quot;/g, '"')
+       .replace(/&#039;/g, '\'')
+       .replace(/&nbsp;/g, ' ');
+}
+
+export function removeHtml(unsafe) {
+  return unsafe.replace(/<.*?>/g, "");
+}
+
 export function colorIsWhite(color) {
   if (!color) return true;
   return (color.toLowerCase() == '#ffffff');
-}
-
-export function getElementsByClassName(classNames) {
-  const retVal = [];
-  for (const className of classNames) {
-    for (const el of document.getElementsByClassName(className)) {
-      retVal.push(el);
-    }
-  }
-  return retVal;
 }
 
 export function updateColorStyles(darkMode, darkModeColor, pageColor) {
@@ -221,4 +283,101 @@ export function updateColorStyles(darkMode, darkModeColor, pageColor) {
     document.documentElement.style.backgroundColor = pageColor;
     document.body.style.backgroundColor = pageColor;
   }
+}
+
+export function getRandomChars(charCount) {
+  let retVal = '';
+  const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  for (let i=0; i<charCount; i++) {
+    retVal += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return retVal;
+}
+
+export function addIdsIfNotThere(entries) {
+  if (!entries || !entries.map) return [];
+  return entries.map(entry => {
+    entry.id = entry.id || getRandomChars(10);
+    return entry;
+  });
+}
+
+export function renderEntry(entry) {
+  let retVal = '<div>';
+  if (entry) {
+    if (entry.image) {
+      retVal += `<img src="${entry.image}" style="height:25px" style="font-size:1rem;">`;
+    }
+    if (entry.text) {
+      retVal += escapeHtml(entry.text);
+    }
+  }
+  retVal += '</div>';
+  return retVal;
+}
+
+export function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+export function getNonEnglishLocale(locale) {
+  return locale == 'en' ? '' : locale;
+}
+
+export function displayWindowsRtWarning() {
+  if (browserIsIeOnWindowsRtTablet(navigator.userAgent)) {
+    trackEvent('Wheel', 'DisplayWindowsRtWarning', navigator.userAgent);
+    const warning = 'It looks like you are using Internet Explorer on a ' +
+                    'Windows RT Tablet PC. You may not be able to open or ' +
+                    'save wheels from this device due to a bug. We realize ' +
+                    'this is frustrating and we apologize. Please use ' +
+                    'another device if possible.';
+    alert(warning);
+  }
+}
+
+export function getFeedbackFormUrl(userAgent, websiteVersion) {
+  return '';
+}
+
+export function getTotalWeight(entries) {
+  let totalWeight = 0;
+  entries.forEach(entry => {
+    if (entry.weight) {
+      if (entry.enabled==true || !entry.hasOwnProperty('enabled')) {
+        totalWeight += entry.weight;
+      }
+    }
+  });
+  return totalWeight;
+}
+
+export function getIndexAtPointer(entries, angle) {
+  let index = 0;
+  if (entries.length==0) return 0;
+  if (entries[0].weight) {
+    const totalWeight = getTotalWeight(entries);
+    const radians = entries.map(e => 2 * Math.PI * e.weight / totalWeight);
+    const endRadians = [];
+    index = 0;
+    let endAngle = radians[0] / 2;
+    entries.forEach((entry, index) => {
+      endRadians.push(endAngle);
+      endAngle += radians[index+1];
+    });
+    index = 0;
+    while (true) {
+      if (angle<endRadians[index]) break;
+      index++;
+      if (index>endRadians.length-1) break;
+    }
+  }
+  else {
+    const radiansPerSegment = 2 * Math.PI / entries.length;
+    index = Math.round(angle / radiansPerSegment);
+  }
+  if (index >= entries.length) index = 0;
+  return index;
 }

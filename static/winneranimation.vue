@@ -31,10 +31,9 @@ limitations under the License.
       return {winnerText: ''}
     },
     methods: {
-      show(winnerText) {
-        const shortWinnerText = Util.extractDisplayText(winnerText, true);
-        if (shortWinnerText) {
-          this.winnerText = shortWinnerText;
+      show(winningEntry) {
+        if (winningEntry.text) {
+          this.winnerText = winningEntry.text;
           this.$refs.overlay.style.display = 'block';
           setTimeout(() => {
             this.$refs.overlay.style.display = 'none';

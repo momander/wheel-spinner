@@ -25,6 +25,14 @@ exports.convertToUid = async function(db, email, uid) {
   }
 }
 
+exports.convertAnonymousSharedWheels = async function(db, anonymousUid, newUid) {
+  console.log(`convertAnonymousSharedWheels(${anonymousUid}, ${newUid}) called`);
+  if (anonymousUid) {
+    const sharedWheels = await getUsersSharedWheels(db, anonymousUid);
+    await setSharedWheelsUid(db, sharedWheels, newUid);
+  }
+}
+
 async function emailAccountExists(db, email) {
   console.log(`emailAccountExists("${email}") called`);
   if (!email) {
@@ -66,4 +74,16 @@ function deleteEmailAccount(db, email, batch) {
   console.log(`deleteEmailAccount("${email}") called`);
   batch.delete(db.doc(`accounts/${email}`));
   console.log(`    done`);
+}
+
+async function getUsersSharedWheels(db, uid) {
+  return await db.collection("shared-wheels").where('uid', '==', uid).get();
+}
+
+async function setSharedWheelsUid(db, sharedWheels, uid) {
+  const batch = db.batch();
+  sharedWheels.forEach(function(doc) {
+    batch.update(doc.ref, {uid: uid});
+  })
+  await batch.commit();
 }

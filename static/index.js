@@ -15,27 +15,22 @@ limitations under the License.
 */
 import Vue from 'vue';
 import Buefy from 'buefy';
-import VueI18n from 'vue-i18n';
 import VueMq from 'vue-mq';
-import VueAB from 'vue-a2b'
-import store from './store.js';
-import app from './app.vue';
-import * as Locales from './Locales.js';
-import Path from './Path.js';
+import store from './store/store.js';
+import router from './router.js';
+import * as i18nSetup from './i18n-setup.js';
 import * as Util from './Util.js';
 
 import 'buefy/dist/buefy.css';
 
-import './images/favicon.png';
-import './images/icon_57.png';
 import './images/icon_192.png';
 import './images/icon_512.png';
 import './images/apple-touch-icon.png';
 import './images/favicon-16x16.png';
 import './images/favicon-32x32.png';
 import './images/favicon.ico';
-import './images/404_cat.png';
 import './images/link.png';
+import './images/user_profile.png';
 
 Util.initTracking();
 if ('serviceWorker' in navigator) {
@@ -51,31 +46,12 @@ Vue.use(VueMq, {
     desktop: Infinity,
   }
 });
-Vue.use(VueI18n);
-Vue.use(VueAB);
 
-const i18n = new VueI18n({
-  locale: new Path(location).locale
-})
-
-loadLocale(i18n.locale).then(() => {
+const i18n = i18nSetup.i18n;
+i18nSetup.loadLanguage('en').then(() => {
   new Vue({
+    router,
     i18n,
-    el: '#app',
-    template: '<app/>',
     store,
-    components: { app }
-  })
+  }).$mount('#app')
 })
-
-function loadLocale(locale) {
-  return new Promise(async (resolve) => {
-    const file = Locales.getMessagesFileName(locale);
-    const messages = (
-      await import(/* webpackChunkName: "locale-[request]" */
-                   `./locales/${file}`)
-    ).default;
-    i18n.setLocaleMessage(locale, messages);
-    resolve();
-  })
-}

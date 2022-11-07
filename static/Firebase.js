@@ -17,12 +17,15 @@ import * as Util from './Util.js';
 import * as FirebaseAuth from './FirebaseAuth.js';
 import * as Firestore from './Firestore.js';
 import * as Locales from './Locales.js';
+import { loadCSS } from 'fg-loadcss';
 
 let firebase;
+let firebaseui;
+let ui;
 
 export async function loadLibraries() {
   if (!firebase) {
-    firebase = await importFirebaseLibs();
+    await importFirebaseLibs();
     initializeFirebase(firebase);
     enableOfflinePersistence(firebase);
   }
@@ -36,11 +39,67 @@ export async function getLoggedInUser() {
   return await FirebaseAuth.getLoggedInUser(firebase.auth());
 }
 
+export async function getUserIdToken() {
+  const user = await getLoggedInUser();
+  if (user) {
+    return await user.getIdToken();
+  }
+}
+
+export async function getUid() {
+  const user = await getLoggedInUser();
+  if (user) {
+    return user.uid;
+  }
+}
+
+export async function getAnonymousTokenId() {
+  const user = await getLoggedInUser();
+  if (user && user.isAnonymous) {
+    return await user.getIdToken();
+  }
+}
+
+export function loadAuthUserInterface(elementName) {
+  loadCSS('https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css');
+  return new Promise(function(resolve, reject) {
+    if (!ui) {
+      ui = new firebaseui.auth.AuthUI(firebase.auth());
+    }
+    ui.start(`#${elementName}`, {
+      signInFlow: 'popup',
+      credentialHelper: firebaseui.auth.CredentialHelper.NONE,
+      signInOptions: [
+        {
+          provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+          customParameters: {
+            prompt: 'select_account'
+          }
+        },
+        firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+        firebase.auth.EmailAuthProvider.PROVIDER_ID
+      ],
+      callbacks: {
+        signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+          resolve(authResult.user);
+        },
+      },
+      tosUrl: '/faq/terms',
+      privacyPolicyUrl: '/privacy-policy.html'
+    });
+  })
+}
+  
 export async function logIn(providerName, locale) {
   const auth = firebase.auth();
   auth.languageCode = Locales.getLoginLocale(providerName, locale);
   const provider = getProvider(providerName);
   return await FirebaseAuth.logIn(auth, provider);
+}
+
+export async function logInAnonymously() {
+  const auth = firebase.auth();
+  return await FirebaseAuth.logInAnonymously(auth);
 }
 
 export async function logInToSheets(locale) {
@@ -58,12 +117,16 @@ export function logOut() {
   }
 }
 
-export function logUserActivity(uid) {
-  const serverNow = firebase.firestore.FieldValue.serverTimestamp();
-  return Firestore.logUserActivity(firebase.firestore(), serverNow, uid);
+export async function logUserActivity() {
+  const uid = await getUid();
+  if (uid) {
+    const serverNow = firebase.firestore.FieldValue.serverTimestamp();
+    return Firestore.logUserActivity(firebase.firestore(), serverNow, uid);
+  }
 }
 
-export async function getWheels(uid) {
+export async function getWheels() {
+  const uid = await getUid();
   return Firestore.getWheels(firebase.firestore(), uid);
 }
 
@@ -71,22 +134,21 @@ export async function setAdminsWheelsToZero(adminsUid) {
   return Firestore.setAdminsWheelsToZero(firebase.firestore(), adminsUid);
 }
 
-export async function logWheelRead(uid, wheelTitle) {
+export async function logWheelRead(wheelTitle) {
+  const uid = await getUid();
   const serverNow = firebase.firestore.FieldValue.serverTimestamp();
   await Firestore.logWheelRead(firebase.firestore(), serverNow, uid, wheelTitle);
 }
 
-export async function deleteWheel(uid, wheelTitle) {
-  await Firestore.deleteWheel(firebase.firestore(), uid, wheelTitle);
+export async function deleteSavedWheel(wheelTitle) {
+  const uid = await getUid();
+  await Firestore.deleteSavedWheel(firebase.firestore(), uid, wheelTitle);
 }
 
-export async function saveWheel(uid, config) {
+export async function saveWheel(config) {
+  const uid = await getUid();
   const serverNow = firebase.firestore.FieldValue.serverTimestamp();
   await Firestore.saveWheel(firebase.firestore(), serverNow, uid, config);
-}
-
-export async function deleteAccount(uid) {
-  await Firestore.deleteAccount(firebase.firestore(), uid);
 }
 
 export async function getDirtyWords() {
@@ -97,6 +159,14 @@ export async function setDirtyWords(words) {
   await Firestore.setDirtyWords(firebase.firestore(), words);
 }
 
+export async function getAdmins() {
+  return await Firestore.getAdmins(firebase.firestore());
+}
+
+export async function getEarningsPerReview() {
+  return await Firestore.getEarningsPerReview(firebase.firestore());
+}
+
 export async function deleteAdmin(uid) {
   await Firestore.deleteAdmin(firebase.firestore(), uid);
 }
@@ -105,20 +175,25 @@ export async function addAdmin(uid, name) {
   await Firestore.addAdmin(firebase.firestore(), uid, name);
 }
 
+export async function saveCarousel(carousel) {
+  await Firestore.saveCarousel(firebase.firestore(), carousel);
+}
+
 export function getDb() {
   return firebase.firestore();
 }
 
-export async function approveSharedWheel(path, uid) {
+export async function approveSharedWheel(path) {
   const increment = firebase.firestore.FieldValue.increment(1);
+  const uid = await getUid();
   await Firestore.approveSharedWheel(firebase.firestore(), increment, path, uid);
 }
 
 export async function deleteSharedWheel(path, incReviewCount) {
-  const user = await getLoggedInUser();
+  const uid = await getUid();
   const increment = incReviewCount ? firebase.firestore.FieldValue.increment(1):
                                      firebase.firestore.FieldValue.increment(0);
-  await Firestore.deleteSharedWheel(firebase.firestore(), increment, path, user.uid);
+  await Firestore.deleteSharedWheel(firebase.firestore(), increment, path, uid);
 }
 
 export async function resetSessionReviews(uid) {
@@ -134,10 +209,10 @@ export async function getNextSharedWheelForReview() {
 }
 
 async function importFirebaseLibs() {
-  const fb = await import(/* webpackChunkName: "firebase" */ 'firebase/app');
+  firebase = await import(/* webpackChunkName: "firebase" */ 'firebase/app');
   await import(/* webpackChunkName: "firebase" */ 'firebase/auth');
   await import(/* webpackChunkName: "firebase" */ 'firebase/firestore');
-  return fb;
+  firebaseui = await import(/* webpackChunkName: "firebase" */ 'firebaseui');
 }
 
 function initializeFirebase(firebase) {

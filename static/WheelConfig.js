@@ -15,47 +15,73 @@ limitations under the License.
 */
 import * as Util from './Util.js';
 
-export default function WheelConfig(winnerMessage) {
-  this.title = '';
-  this.names = [
-    'Hamburger', 'Lasagna', 'Fish and chips', 'فلافل - Falafel',
-    '炒麵 - Chow mein', 'Tortilla española', 'Crêpes', 'Pierogi', 'Feijoada',
-    'ผัดไทย - Pad thai', 'Döner kebab', 'Phở'
-  ];
-    this.colorSettings = [
-    {color: '#3369E8', enabled: true},
-    {color: '#D50F25', enabled: true},
-    {color: '#EEB211', enabled: true},
-    {color: '#009925', enabled: true},
-    {color: '#000000', enabled: false},
-    {color: '#000000', enabled: false},
-  ];
-  this.pageBackgroundColor = '#FFFFFF';
-  this.pictureType = 'none';
-  this.galleryPicture = 'images/none.png';
-  this.customPictureName = '';
-  this.customPictureDataUri = '';
-  this.allowDuplicates = true;
-  this.duringSpinSound = 'ticking-sound';
-  this.afterSpinSound = 'applause-sound';
-  this.maxNames = 500;
-  this.spinTime = 10;
-  this.playCheers = true;
-  this.launchConfetti = true;
-  this.animateWinner = false;
-  this.autoRemoveWinner = false;
-  this.displayWinnerDialog = true;
-  this.winnerMessage = winnerMessage || 'We have a winner!';
-  this.playClickWhenWinnerRemoved = false;
-  this.hubSize = 'S';
-  this.slowSpin = false;
+export default class WheelConfig {
 
-  this.loadJson = function(jsonString) {
-    let obj = JSON.parse(jsonString);
-    this.copyPropertiesFrom(obj);
+  constructor(winnerMessage) {
+    this.title = '';
+    this.description = '';
+    this.entries = [
+      {text: 'Ali'},
+      {text: 'Beatriz'},
+      {text: 'Charles'},
+      {text: 'Diya'},
+      {text: 'Eric'},
+      {text: 'Fatima'},
+      {text: 'Gabriel'},
+      {text: 'Hanna'},
+    ];
+    this.colorSettings = [
+      {color: '#3369E8', enabled: true},
+      {color: '#D50F25', enabled: true},
+      {color: '#EEB211', enabled: true},
+      {color: '#009925', enabled: true},
+      {color: '#000000', enabled: false},
+      {color: '#000000', enabled: false},
+    ];
+    this.pageBackgroundColor = '#FFFFFF';
+    this.type = 'color';
+    this.pictureType = 'none';
+    this.coverImageType = '';
+    this.coverImageName = '';
+    this.galleryPicture = '/images/none.png';
+    this.customPictureName = '';
+    this.customPictureDataUri = '';
+    this.customCoverImageDataUri = '';
+    this.centerText = '';
+    this.allowDuplicates = true;
+    this.duringSpinSound = 'ticking-sound';
+    this.duringSpinSoundVolume = 100;
+    this.afterSpinSound = 'applause-sound';
+    this.afterSpinSoundVolume = 100;
+    this.maxNames = 500;
+    this.spinTime = 10;
+    this.playCheers = true;
+    this.launchConfetti = true;
+    this.animateWinner = false;
+    this.autoRemoveWinner = false;
+    this.displayWinnerDialog = true;
+    this.displayRemoveButton = true;
+    this.displayHideButton = true;
+    this.winnerMessage = winnerMessage || 'We have a winner!';
+    this.playClickWhenWinnerRemoved = false;
+    this.hubSize = 'S';
+    this.drawOutlines = false;
+    this.slowSpin = false;
+    this.showTitle = true;
+    this.isAdvanced = false;
   }
 
-  this.getJson = function() {
+  loadJson(jsonString) {
+    try {
+      let obj = JSON.parse(jsonString);
+      this.copyPropertiesFrom(obj);
+    }
+    catch (ex) {
+      console.error(ex);
+    }
+  }
+
+  getJson() {
     var keys = Object.keys(this);
     var retVal = {};
     keys.forEach(key => {
@@ -64,44 +90,46 @@ export default function WheelConfig(winnerMessage) {
     return JSON.stringify(retVal);
   }
 
-  this.getValues = function() {
+  getValues() {
     return JSON.parse(this.getJson());
   }
 
-  this.loadValues = function(values) {
+  loadValues(values) {
     this.copyPropertiesFrom(values);
   }
 
-  this.clone = function() {
+  clone() {
     const clone = new WheelConfig();
     clone.loadValues(this.getValues());
     return clone;
   }
 
-  this.getDefaultColorSettings = function() {
-    return new WheelConfig().colorSettings;
+  hasOnlyDefaultEntries() {
+    return Util.arraysEqual(this.getTexts(), new WheelConfig().getTexts());
   }
 
-  this.getDefaultNames = function() {
-    return new WheelConfig().names;
-  }
-
-  this.setCustomPicture = function(name, dataUri) {
+  setCustomPicture(name, dataUri) {
     this.customPictureName = name;
     this.customPictureDataUri = dataUri;
     this.pictureType = 'uploaded';
   }
+
+  setCustomCoverImage(name, dataUri) {
+    this.coverImageName = name;
+    this.customCoverImageDataUri = dataUri;
+    this.coverImageType = 'uploaded';
+  }
   
-  this.getWheelImage = function() {
+  getWheelImage() {
     if (this.pictureType == 'none') {
-      return null;
+      return '/images/none.png';
     }
     if (this.pictureType == 'gallery') {
       if (this.galleryPicture) {
         return this.galleryPicture;
       }
     }
-    if (this.pictureType == 'uploaded') {
+    if (this.pictureType == 'uploaded' || this.pictureType == 'text') {
       if (this.customPictureDataUri) {
         return this.customPictureDataUri;
       }
@@ -109,60 +137,63 @@ export default function WheelConfig(winnerMessage) {
     return null;
   }
 
-  this.shouldPlayTicks = function() {
+  getCoverImage() {
+    if (this.coverImageType == 'gallery') {
+      if (this.coverImageName) {
+        return this.coverImageName;
+      }
+    }
+    if (this.coverImageType == 'uploaded') {
+      if (this.customCoverImageDataUri) {
+        return this.customCoverImageDataUri;
+      }
+    }
+    return null;
+  }
+
+  shouldPlayTicks() {
     return (this.duringSpinSound=='ticking-sound');
   }
 
-  this.setColors = function(colorValues, enabledValues) {
-    for (var i=0; i<6; i++) {
-      this.colorSettings[i] = {color: colorValues[i], enabled: enabledValues[i]};
+  setColorValues(colorValues) {
+    if (!colorValues) return;
+    this.colorSettings = colorValues.map(cv => ({color: cv, enabled: true}));
+    while (this.colorSettings.length<6) {
+      this.colorSettings.push({color: '#000000', enabled: false});
     }
   }
 
-  this.getCoalescedColors = function() {
-    var retVal = [];
-    for (var i=0; i<6; i++) {
-      if (this.colorSettings[i].enabled) {
-        retVal.push(this.colorSettings[i].color);
-      }
-    }
-    if (retVal.length == 0) {
-      retVal.push('#CCCCCC');
-    }
-    return retVal;
+  getCoalescedColors() {
+    const retVal = this.colorSettings
+                       .filter(cs => cs.enabled)
+                       .map(cs => cs.color);
+    return retVal.length>0 ? retVal : ['#CCCCCC'];
   }
 
-  this.isTooBigForDatabase = function() {
+  isTooBigForDatabase() {
     return (this.getJson().length > 990000);
   }
 
-  this.copyPropertiesFrom = function(obj) {
+  getTexts() {
+    return this.entries.map(e=>e.text).filter(txt=>txt);
+  }
+
+  getFirstText() {
+    const texts = this.getTexts();
+    return texts.length>0 ? texts[0] : '';
+  }
+
+  copyPropertiesFrom(obj) {
     Object.assign(this, JSON.parse(JSON.stringify(obj)));
     this.convertOldData();
   }
 
-  this.convertOldData = function() {
+  convertOldData() {
     if (Array.isArray(this.names)) {
-      this.names = this.names.map(
-        // Convert old height metric to new height metric.
-        name => name.replace(/height="25"/, 'style="height:25px"')
-      );
-      // Remove any entries that are unprintable characters.
-      this.names = this.names.filter(name => name.trim());
-    }
-    if (Array.isArray(this.entries)) {
-      // Convert from new "entries" format to old "names" format.
-      this.names = this.entries.map(entry => {
-        let retVal = '';
-        if (entry.image) {
-          retVal += `<img src="${entry.image}" style="height:25px;font-size:1rem;">`;
-        }
-        if (entry.text) {
-          retVal += Util.escapeHtml(entry.text);
-        }
-        return retVal;
+      this.entries = this.names.map(name => {
+        return Util.createEntry(Util.extractText(name), Util.extractImage(name));
       });
-      delete this.entries;
+      delete this.names;
     }
     this.maxNames = parseInt(this.maxNames);
     this.spinTime = parseInt(this.spinTime);
@@ -174,6 +205,18 @@ export default function WheelConfig(winnerMessage) {
       this.afterSpinSound = 'no-sound';
     }
     delete this.playCheers;
+    if (!this.hasOwnProperty('showTitle')) {
+      this.showTitle = true;
+    }
+    if (this.type=='image' && !this.coverImageType) {
+      this.coverImageType = 'gallery';
+    }
+    if (this.isAdvanced && this.entries.length > 0) {
+      if (!this.entries[0].hasOwnProperty('enabled')) {
+        this.entries.forEach(entry => {
+          entry.enabled = true;
+        });
+      }
+    }
   }
-
 }

@@ -14,60 +14,58 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 export async function getTitle(sheetId) {
-  return gapi.client.sheets.spreadsheets.get({
+  const response = await gapi.client.sheets.spreadsheets.get({
     spreadsheetId: sheetId
-  }).then(function(response) {
-    return response.result.properties.title;
-  })
+  });
+  return response.result.properties.title;
 }
 
 export async function getTabNames(sheetId) {
-  return gapi.client.sheets.spreadsheets.get({
+  const response = await gapi.client.sheets.spreadsheets.get({
     spreadsheetId: sheetId
-  }).then(function(response) {
-    return response.result.sheets.map(sheet => sheet.properties.title);
-  })
+  });
+  return response.result.sheets.map(sheet => sheet.properties.title);
 }
 
 export async function getColumns(sheetId, tabName) {
-  return gapi.client.sheets.spreadsheets.values.get({
+  const response = await gapi.client.sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
     range: tabName
-  }).then(function(response) {
-    const columns = [];
-    const range = response.result;
-    if (range.values && range.values.length > 0) {
-      var row = range.values[0];
-      var charCode = 65;
-      for (var i=0; i<row.length && charCode<91; i++) {
-        columns.push({id: String.fromCharCode(charCode), name: row[i]});
-        charCode += 1;
-      }
+  });
+  const columns = [];
+  const range = response.result;
+  if (range.values && range.values.length > 0) {
+    const row = skipEmptyRows(range.values)[0];
+    for (let i=0; i<row.length && i<27; i++) {
+      columns.push({id: String.fromCharCode(i+65), name: row[i]});
     }
-    return columns;
-  })
+  }
+  return columns;
 }
 
 export async function getEntries(sheetId, tabName, columnId, skipFirstRow) {
-  return gapi.client.sheets.spreadsheets.values.get({
+  const response = await gapi.client.sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
     range: tabName + '!' + columnId + ':' + columnId,
-  }).then(function(response) {
-    const range = response.result;
-    const entries = [];
-    if (range.values && range.values.length > 0) {
-      for (let i=0; i<range.values.length; i++) {
-        if (i == 0 && skipFirstRow) {
-          // Skip the first row if requested.
-        }
-        else {
-          const row = range.values[i];
-          if (typeof row[0] != 'undefined') {
-            entries.push(row[0]);
-          }
+  });
+  const entries = [];
+  if (response.result.values && response.result.values.length>0) {
+    const rows = skipEmptyRows(response.result.values);
+    for (let i=0; i<rows.length; i++) {
+      if (i == 0 && skipFirstRow) {
+        // Skip the first row if requested.
+      }
+      else {
+        const row = rows[i];
+        if (typeof row[0] != 'undefined') {
+          entries.push(row[0]);
         }
       }
     }
-    return entries;
-  })
+  }
+  return entries;
+}
+
+function skipEmptyRows(sheetRows) {
+  return sheetRows.filter(row => row.length>0)
 }

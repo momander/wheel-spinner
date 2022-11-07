@@ -15,7 +15,7 @@ limitations under the License.
 */
 import ImageCache from './ImageCache.js';
 import PieSlice from './PieSlice.js';
-import * as FontMeasurer from './FontMeasurer.js';
+import * as FontPicker from './FontPicker.js';
 import * as hubSizes from './hubSizes.js';
 import * as Util from './Util.js';
 import * as ImageUtil from './ImageUtil.js';
@@ -25,23 +25,30 @@ export default class WheelPainter {
 
   constructor() {
     this.imageCache = new ImageCache();
-    this.names = [];
-    this.wheelImages = {};
+    this.entries = [];
+    this.imageDataCache = {};
   }
 
-  draw(context, angle, names, colors, centerImage, hubSize, backgroundColor) {
-    const wheelRadius = context.canvas.width * .44;
-    const hubRadius = this.getHubRadius(wheelRadius, hubSize);
-    const drawShadows = Util.colorIsWhite(backgroundColor);
-    this.drawBackgroundColor(context, backgroundColor);
-    this.drawWheelShadow(context, wheelRadius, drawShadows);
-    if (names.includes('')) this.drawHat(context, wheelRadius, hubRadius);
-    this.drawWheel(context, wheelRadius, angle, names, colors, hubRadius);
-    this.drawPointer(context, wheelRadius, drawShadows);
-    this.drawHub(context, angle, centerImage, hubRadius);
+  draw(context, angle, displayEntries, allEntries, wheelConfig, darkMode) {
+    this.angle = angle;
+    this.displayEntries = displayEntries;
+    this.allEntries = allEntries;
+    this.wheelConfig = wheelConfig;
+    this.wheelRadius = context.canvas.width * .44;
+    this.hubRadius = this.getHubRadius(wheelConfig.type, this.wheelRadius, wheelConfig.hubSize);
+    this.backgroundColor = darkMode ? '#000' : wheelConfig.pageBackgroundColor;
+    this.drawShadows = Util.colorIsWhite(this.backgroundColor);
+    this.drawBackgroundColor(context);
+    this.drawWheelShadow(context);
+    this.drawCoverImage(context);
+    this.drawWheel(context);
+    this.drawPointer(context);
+    this.drawCenterImage(context);
+    this.drawCoverPlate(context);
   }
 
-  getHubRadius(wheelRadius, hubSize) {
+  getHubRadius(wheelType, wheelRadius, hubSize) {
+    if (wheelType=='image') return 0;
     const hubFraction = hubSizes.hubSizes[hubSize] || 0.2;
     return Math.round(hubFraction * wheelRadius);
   }
@@ -49,167 +56,232 @@ export default class WheelPainter {
   refresh() {
     this.wheelImage = null;
     this.pointerImage = null;
+    this.coverPlateImage = null;
   }
 
-  drawBackgroundColor(context, backgroundColor) {
-    if (backgroundColor=='#FFFFFF') return;
+  drawBackgroundColor(context) {
+    if (this.backgroundColor=='#FFFFFF') return;
     context.save();
-    context.fillStyle = backgroundColor;
+    context.fillStyle = this.backgroundColor;
     context.fillRect(0, 0, context.canvas.width, context.canvas.height);
     context.restore();
   }
 
-  drawWheelShadow(context, wheelRadius, drawShadows) {
-    if (!drawShadows) return;
+  drawWheelShadow(context) {
+    if (!this.drawShadows) return;
     if (!this.wheelShadowImage) {
-      this.wheelShadowImage = ImageUtil.createInMemoryImage(context.canvas.width, context.canvas.height);
-      this.drawWheelShadowNoCache(this.wheelShadowImage.getContext("2d"), wheelRadius);
+      this.wheelShadowImage = ImageUtil.createInMemoryImage(context);
+      this.drawWheelShadowNoCache(this.wheelShadowImage.getContext("2d"));
     }
     context.drawImage(this.wheelShadowImage, 0, 0);
   }
 
-  drawWheel(context, wheelRadius, angle, names, colors, hubRadius) {
-    if (!this.wheelImage) {
-      this.wheelImage = ImageUtil.createInMemoryImage(context.canvas.width, context.canvas.height);
-      this.drawWheelNoCache(this.wheelImage.getContext("2d"), wheelRadius, names, colors, hubRadius);
-      this.names = names.slice(0);
-    }
-    var width = context.canvas.width;
-    var height = context.canvas.height;
-    context.save();
-    context.translate(width / 2, height / 2);
-    context.rotate(angle);
-    context.translate(-width / 2, -height / 2);
-    context.drawImage(this.wheelImage, 0, 0);
-    context.restore();
-  }
-
-  drawHat(context, wheelRadius, hubRadius) {
-    const image = this.imageCache.getImage('images/hat-with-names.png');
-    const scale = (wheelRadius - hubRadius) / image.width;
-    const x = context.canvas.width / 2 - wheelRadius;
-    const height = image.height * scale;
-    const y = (context.canvas.height - height) / 2;
-    const width = wheelRadius - hubRadius;
-    context.drawImage(image, x, y, width, height);
-  }
-
-  drawPointer(context, wheelRadius, drawShadows) {
-    if (!this.pointerImage) {
-      this.pointerImage = ImageUtil.createInMemoryImage(context.canvas.width, context.canvas.height);
-      this.drawPointerNoCache(this.pointerImage.getContext("2d"), wheelRadius, drawShadows);
-    }
-    context.drawImage(this.pointerImage, 0, 0);
-  }
-
-  drawWheelShadowNoCache(context, wheelRadius) {
-    var x = context.canvas.width / 2;
-    var y = context.canvas.height / 2;
-    var gradient = context.createRadialGradient(x, y, wheelRadius, x, y+4, wheelRadius+8);
+  drawWheelShadowNoCache(context) {
+    const x = context.canvas.width / 2;
+    const y = context.canvas.height / 2;
+    const gradient = context.createRadialGradient(x, y, this.wheelRadius, x, y+4, this.wheelRadius+8);
     gradient.addColorStop(0, '#bbb');
     gradient.addColorStop(1, '#fff');
     context.fillStyle = gradient;
     context.fillRect(0, 0, context.canvas.width, context.canvas.height);
   }
 
-  drawWheelNoCache(context, wheelRadius, names, colors, hubRadius) {
+  drawWheel(context) {
+    if (!this.wheelImage) {
+      this.wheelImage = ImageUtil.createInMemoryImage(context);
+      this.entries = this.displayEntries.slice(0);
+      this.drawWheelNoCache(this.wheelImage.getContext("2d"));
+    }
+    const width = context.canvas.width;
+    const height = context.canvas.height;
+    context.save();
+    context.translate(width / 2, height / 2);
+    context.rotate(this.angle);
+    context.translate(-width / 2, -height / 2);
+    context.drawImage(this.wheelImage, 0, 0);
+    context.restore();
+  }
+
+  drawWheelNoCache(context) {
+    this.drawSlices(context);
+    this.drawCenterCircle(context);
+  }
+
+  drawCoverImage(context) {
+    if (this.wheelConfig.type=='color') return;
+    const image = this.imageCache.getImage(this.wheelConfig.getCoverImage());
+    if (!image) return;
+    context.save();
+    context.translate(context.canvas.width/2, context.canvas.height/2);
+    context.rotate(this.angle);
+    context.beginPath();
+    context.arc(0, 0, this.wheelRadius-1, 0, Math.PI*2, true);
+    context.clip();
+    context.drawImage(image, -this.wheelRadius, -this.wheelRadius, this.wheelRadius*2, this.wheelRadius*2);
+    context.restore();
+  }
+
+  drawSlices(context) {
     context.save();
     context.translate(context.canvas.width / 2, context.canvas.height / 2);
-    var radiansPerSegment = 2 * Math.PI / names.length;
     const self = this;
-    let slices = names.map(function(entry, index) {
-      const color = colors[index % colors.length];
-      const displayText = Util.extractDisplayText(entry, true);
-      const imageData = Util.extractImage(entry);
-      const image = self.getWheelImage(imageData);
-      return new PieSlice(radiansPerSegment, wheelRadius, hubRadius, color, displayText, image);
-    });
-    if (slices.length > 0) {
-      context.font = this.getSmallestFont(context, slices, wheelRadius, hubRadius);
-      slices.forEach(slice => {
-        slice.draw(context);
-        context.rotate(-radiansPerSegment);
+    if (this.wheelConfig.isAdvanced) {
+      const totalWeight = Util.getTotalWeight(this.entries);
+      const radians = [];
+      let smallestAngle = 2 * Math.PI;
+      this.entries.forEach((entry, index) => {
+        radians[index] = 2 * Math.PI * entry.weight / totalWeight;
+        if (radians[index] < smallestAngle) smallestAngle = radians[index];
       });
+      context.font = FontPicker.getFont(
+        context, this.allEntries.map(e=>e.text),
+        this.wheelRadius, this.hubRadius, smallestAngle
+      );
+      this.displayEntries
+        .map(function(entry, index) {
+          return new PieSlice(
+            self.wheelConfig, radians[index], self.wheelRadius, self.hubRadius,
+            index, entry, self.getImageFromData(entry.image)
+          );
+        })
+        .forEach((slice, index) => {
+          const radiansPerSegment = radians[index] / 2 + radians[index + 1] / 2;
+          slice.draw(context);
+          context.rotate(-radiansPerSegment);
+        });
+    }
+    else {
+      const radiansPerSegment = 2 * Math.PI / this.displayEntries.length;
+      context.font = FontPicker.getFont(
+        context, this.allEntries.map(e=>e.text),
+        this.wheelRadius, this.hubRadius, radiansPerSegment
+      );
+      this.displayEntries
+        .map(function(entry, index) {
+          return new PieSlice(
+            self.wheelConfig, radiansPerSegment, self.wheelRadius, self.hubRadius,
+            index, entry, self.getImageFromData(entry.image)
+          );
+        })
+        .forEach(slice => {
+          slice.draw(context);
+          context.rotate(-radiansPerSegment);
+        });
     }
     context.restore();
+  }
+
+
+
+  drawCenterCircle(context) {
+    if (this.wheelConfig.type=='image') return;
     context.save();
     context.translate(context.canvas.width / 2, context.canvas.height / 2);
-    this.drawCenterCircle(context, hubRadius);
+    context.fillStyle = 'white';
+    context.beginPath();
+    context.arc(0, 0, this.hubRadius, 0, Math.PI * 2);
+    context.fill();
+    if (this.wheelConfig.drawOutlines) {
+      context.lineWidth = 2;
+      context.strokeStyle = '#333333';
+      context.stroke();
+    }
     context.restore();
   }
 
-  getSmallestFont(context, slices, wheelRadius, hubRadius) {
-    let minFontSize = 200;
-    let fontName = 'Quicksand, sans-serif';
-    slices.forEach(slice => {
-      let fontSize = FontMeasurer.getFontSize(context, slice.displayText,
-                              slices.length, fontName, wheelRadius, hubRadius);
-      if (fontSize < minFontSize) {
-        minFontSize = fontSize;
-      }
-    })
-    return minFontSize + 'px ' + fontName;
+  drawPointer(context) {
+    if (!this.pointerImage) {
+      this.pointerImage = ImageUtil.createInMemoryImage(context);
+      this.drawPointerNoCache(this.pointerImage.getContext("2d"));
+    }
+    context.drawImage(this.pointerImage, 0, 0);
   }
 
-  drawCenterCircle(context, hubRadius) {
-    context.fillStyle = 'white';
-    context.beginPath();
-    context.arc(0, 0, hubRadius, 0, Math.PI * 2);
-    context.fill();
-    context.lineWidth = 2;
-    context.strokeStyle = '#333333';
-    context.stroke();
-  }
-
-  drawPointerNoCache(context, wheelRadius, drawShadows) {
+  drawPointerNoCache(context) {
     context.save();
     context.translate(context.canvas.width / 2, context.canvas.height / 2);
-    if (drawShadows) {
+    if (this.drawShadows) {
       context.shadowColor = '#444';
       context.shadowOffsetY = 4;
       context.shadowBlur = 10;
     }
     context.beginPath();
-    context.moveTo(wheelRadius - 15, 0);
-    context.lineTo(wheelRadius + 25, -20);
-    context.lineTo(wheelRadius + 25, 20);
-    context.lineTo(wheelRadius - 15, 0);
-    context.lineWidth = 2;
-    context.strokeStyle = '#333333';
-    context.stroke();
-    context.fillStyle = 'lightgray';
+    context.moveTo(this.wheelRadius - 15, 0);
+    context.lineTo(this.wheelRadius + 25, -20);
+    context.lineTo(this.wheelRadius + 25, 20);
+    context.lineTo(this.wheelRadius - 15, 0);
+    if (this.wheelConfig.drawOutlines) {
+      context.lineWidth = 2;
+      context.strokeStyle = '#333333';
+      context.stroke();
+    }
+    context.fillStyle = '#BBB';
     context.fill();
     context.restore();
   }
 
-  drawHub(context, angle, centerImage, hubRadius) {
-    var image = this.imageCache.getImage(centerImage);
-    if (image) {
-      context.save();
-      context.translate(context.canvas.width / 2, context.canvas.height / 2);
-      context.rotate(angle);
-      context.beginPath();
-      context.arc(0, 0, hubRadius-1, 0, Math.PI * 2, true);
-      context.clip();
-      context.drawImage(image, -hubRadius, -hubRadius, hubRadius*2, hubRadius*2);
-      context.restore();
+  drawCoverPlate(context) {
+    if (this.displayEntries.length==this.allEntries.length) return;
+    if (!this.coverPlateImage && this.displayEntries.length>0) {
+      this.coverPlateImage = ImageUtil.createInMemoryImage(context);
+      this.drawCoverPlateNoCache(this.coverPlateImage.getContext("2d"));
+    }
+    if (this.coverPlateImage) {
+      context.drawImage(this.coverPlateImage, 0, 0);
     }
   }
 
-  getWheelImage(imageData) {
+  drawCoverPlateNoCache(context) {
+    const entriesCount = this.displayEntries.length;
+    const radians = Math.max(2*2*Math.PI/entriesCount, Math.PI/4);
+    context.save();
+    context.translate(context.canvas.width / 2, context.canvas.height / 2);
+    context.scale(-1,1);
+    context.shadowColor = '#444';
+    context.shadowOffsetY = 4;
+    context.shadowBlur = 10;
+    context.lineWidth = this.wheelRadius - this.hubRadius + 10;
+    const image = this.imageCache.getImage('/images/brushed-metal.png');
+    context.strokeStyle = context.createPattern(image, 'repeat');
+    context.beginPath();
+    context.arc(0, 0, (this.wheelRadius+this.hubRadius)/2, -radians/2, radians/2);
+    context.stroke();
+    context.restore();
+  }
+
+  drawCenterImage(context) {
+    // The center image is not drawn as part of drawWheelNoCache() because it
+    // takes a few ticks to load.
+    if (this.wheelConfig.type=='image') return;
+    const image = this.imageCache.getImage(this.wheelConfig.getWheelImage());
+    if (!image) return;
+    context.save();
+    context.translate(context.canvas.width/2, context.canvas.height/2);
+    context.rotate(this.angle);
+    context.beginPath();
+    context.arc(0, 0, this.hubRadius-1, 0, Math.PI * 2, true);
+    context.clip();
+    context.drawImage(image, -this.hubRadius, -this.hubRadius, this.hubRadius*2, this.hubRadius*2);
+    context.restore();
+  }
+
+  getImageFromData(imageData) {
     if (imageData) {
-      if (!this.wheelImages[imageData]) {
+      if (!this.imageDataCache[imageData]) {
         const image = new Image();
         const self = this;
         image.onload = (function() {
-          self.wheelImage = null;
-        })
+          self.clearCachedWheelImage();
+        });
         image.setAttribute('crossOrigin', 'anonymous');
         image.src = imageData;
-        this.wheelImages[imageData] = image;
+        this.imageDataCache[imageData] = image;
       }
-      return this.wheelImages[imageData];
+      return this.imageDataCache[imageData];
     }
   }
 
+  clearCachedWheelImage() {
+    this.wheelImage = null;
+  }
 }

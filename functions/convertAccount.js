@@ -20,18 +20,22 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 app.use(cors({ origin: true }));
+const Util = require('./Util.js');
 
 app.post('/', async (req, res) => {
   try {
+    const oldUid = await Util.getUidFromAuthHeader(req.body.oldIdToken);
     const token = await admin.auth().verifyIdToken(req.headers['authorization']);
-    await AccountService.convertToUid(
-      admin.firestore(),
-      token.email,
-      token.uid
-    );
+    const newUid = token.uid;
+    const db = admin.firestore();
+    Promise.all([
+      AccountService.convertToUid(db, token.email, newUid),
+      AccountService.convertAnonymousSharedWheels(db, oldUid, newUid)
+    ])
     res.json({status: 'OK'});
   }
   catch(ex) {
+    console.log(ex);
     res.status(500).json({error: ex.toString()});
   }
 });

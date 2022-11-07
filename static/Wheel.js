@@ -14,70 +14,69 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import WheelPainter from './WheelPainter.js';
-import DisplayNamePicker from './DisplayNamePicker.js';
+import DisplayEntryPicker from './DisplayEntryPicker.js';
+import * as Util from './Util.js';
+// import store from './store/wheelStore.js';
 
-export default function Wheel() {
-  this.colors = [];
-  this.angle = 0;
-  this.speed = 0.005;
-  this.stopSpeed = 0.0001;
-  this.acceleration = 0.01;
-  this.deceleration = 0;
-  this.nameLastTick = '';
-  this.state = new NotSpunState();
-  this.wheelPainter = new WheelPainter();
-  this.namePicker = new DisplayNamePicker();
-  this.doneSpinningCallback = () => {};
-  this.nameChangedCallback = () => {};
+export default class Wheel {
 
-  this.setNames = function(names, maxSlices, allowDuplicates) {
-    if (this.state.editAllowed()) {
-      this.namePicker.setNames(names, maxSlices, allowDuplicates);
+  constructor() {
+    this.angle = 0;
+    this.speed = 0;
+    this.state = new InitialDemoSpinState(this);
+    this.wheelPainter = new WheelPainter();
+    this.entryPicker = new DisplayEntryPicker();
+    this.doneSpinningCallback = () => {};
+    this.nameChangedCallback = () => {};
+  }
+
+  setEntries(entries, maxSlices, allowDuplicates) {
+    if (!this.state.isSpinning()) {
+      const enabledEntries = entries.filter(entry => entry.enabled || !entry.hasOwnProperty('enabled'));
+      this.entryPicker.setEntries(enabledEntries, maxSlices, allowDuplicates);
       this.wheelPainter.refresh();
     }
   }
 
-  this.refresh = function() {
+  refresh() {
     this.wheelPainter.refresh();
   }
 
-  this.configure = function(colors, centerImage, spinTime, slowSpin, hubSize, pageBackgroundColor) {
-    if (this.state.editAllowed()) {
-      this.colors = colors;
-      this.centerImage = centerImage;
-      this.spinTime = spinTime;
-      this.acceleration = (slowSpin ? 0.001 : 0.01);
-      this.hubSize = hubSize;
-      this.pageBackgroundColor = pageBackgroundColor;
+  configure(wheelConfig, darkMode) {
+    if (!this.state.isSpinning()) {
+      this.wheelConfig = wheelConfig;
+      this.darkMode = darkMode;
       this.wheelPainter.refresh();
     }
   }
 
-  this.tick = function() {
+  tick() {
     this.state.tick(this);
-    const updated = this.namePicker.tick(this.getIndexAtPointer());
+    this.advance();
+    const updated = this.entryPicker.tick(this.getIndexAtPointer());
     if (updated) this.wheelPainter.refresh();
   }
 
-  this.click = function(nameChangedCallback, doneSpinningCallback) {
+  click(nameChangedCallback, doneSpinningCallback) {
     this.nameChangedCallback = nameChangedCallback;
     this.doneSpinningCallback = doneSpinningCallback;
     this.state.click(this);
   }
 
-  this.spinIsDone = function() {
-    this.doneSpinningCallback(this.getNameAtPointer());
+  spinIsDone() {
+    this.doneSpinningCallback(this.getEntryAtPointer());
   }
 
-  this.isSpinning = function() {
+  isSpinning() {
     return this.state.isSpinning();
   }
 
-  this.setRandomAngle = function() {
+  setRandomPosition() {
     this.angle = Math.random() * 2 * Math.PI;
+    this.entryPicker.setRandomPosition();
   }
 
-  this.advance = function() {
+  advance() {
     this.indexFromLastTick = this.indexFromThisTick;
     this.indexFromThisTick = this.getIndexAtPointer();
     if (this.indexFromThisTick != this.indexFromLastTick) {
@@ -89,147 +88,149 @@ export default function Wheel() {
     }
   }
 
-  this.getIndexAtPointer = function() {
-    const numberOfNames = this.namePicker.getNumberOfDisplayNames();
-    var radiansPerSegment = 2 * Math.PI / numberOfNames;
-    var index = this.angle / radiansPerSegment;
-    index = Math.round(index);
-    if (index >= numberOfNames) {
-      index = 0;
-    }
-    return index;
+  getIndexAtPointer() {
+    return Util.getIndexAtPointer(
+      this.entryPicker.getDisplayEntries(),
+      this.angle
+    );
   }
 
-  this.getNameAtPointer = function() {
-    return this.namePicker.getDisplayNames()[this.getIndexAtPointer()];
+  getEntryAtPointer() {
+    return this.entryPicker.getDisplayEntries()[this.getIndexAtPointer()];
   }
 
-  this.resetRotation = function() {
+  resetRotation() {
     this.angle = 0;
   }
 
-  this.calculateDeceleration = function() {
-    var decelTicks = (this.spinTime - 1) * 60;
-    var startSpeed = 60 * this.acceleration;
-    this.deceleration = Math.exp(Math.log(this.stopSpeed/startSpeed)/decelTicks);
+  getStateTimeLengths() {
+    const retVal = { accelerating: 0, decelerating: 0 };
+    const spinTicks = this.wheelConfig.spinTime * 60;
+    retVal.accelerating = Math.min(60, spinTicks/3);
+    retVal.decelerating = spinTicks - retVal.accelerating;
+    return retVal;
   }
 
-  this.accelerate = function() {
-    this.speed += this.acceleration;
-  }
-
-  this.decelerate = function() {
-    this.speed = this.speed * this.deceleration;
-  }
-
-  this.isBelowStopSpeed = function() {
-    return (this.speed < this.stopSpeed);
-  }
-
-  this.draw = function(context) {
-    this.wheelPainter.draw(context, this.angle, this.namePicker.getDisplayNames(),
-                          this.colors, this.centerImage, this.hubSize,
-                          this.pageBackgroundColor);
-  }
-
-}
-
-
-
-
-function NotSpunState() {
-
-  this.tick = function(wheel) {
-    wheel.advance();
-  }
-
-  this.click = function(wheel) {
-    wheel.calculateDeceleration();
-    wheel.state = new AcceleratingState();
-  }
-
-  this.editAllowed = function() {
-    return true;
-  }
-
-  this.isSpinning = function() {
-    return false;
-  }
-
-}
-
-
-function AcceleratingState() {
-  this.ticks = 0;
-  this.MAX_AGE = 60;
-
-  this.tick = function(wheel) {
-    wheel.accelerate();
-    wheel.advance();
-    this.ticks += 1;
-    if (this.ticks > this.MAX_AGE) {
-      wheel.setRandomAngle();
-      wheel.state = new SpinningState();
+  draw(context) {
+    if (this.wheelConfig && this.state.drawThisFrame()) {
+      this.wheelPainter.draw(
+        context, this.angle, this.entryPicker.getDisplayEntries(),
+        this.entryPicker.getAllEntries(), this.wheelConfig, this.darkMode
+      );
     }
   }
 
-  this.click = function(wheel) {
+}
+
+
+class InitialDemoSpinState {
+
+  constructor(wheel) {
+    wheel.speed = 0.005;
   }
 
-  this.editAllowed = function() {
+  tick(wheel) {
+  }
+
+  click(wheel) {
+    wheel.state = new AcceleratingState(wheel);
+  }
+
+  isSpinning() {
     return false;
   }
 
-  this.isSpinning = function() {
+  drawThisFrame() {
     return true;
   }
 
 }
 
 
-function SpinningState() {
+class AcceleratingState {
 
-  this.tick = function(wheel) {
-    wheel.decelerate();
-    wheel.advance();
-    if (wheel.isBelowStopSpeed()) {
-      wheel.speed = 0;
-      wheel.state = new OpenForEditState();
-      wheel.spinIsDone();
+  constructor(wheel) {
+    this.age = 0;
+    this.MAX_AGE = wheel.getStateTimeLengths().accelerating;
+  }
+
+  tick(wheel) {
+    const acceleration = (wheel.wheelConfig.slowSpin ? 0.001 : 0.01);
+    wheel.speed += acceleration;
+    this.age += 1;
+    if (this.age > this.MAX_AGE) {
+      wheel.setRandomPosition();
+      wheel.state = new DeceleratingState(wheel);
     }
   }
 
-  this.click = function(wheel) {
+  click(wheel) {
   }
 
-  this.editAllowed = function() {
-    return false;
+  isSpinning() {
+    return true;
   }
 
-  this.isSpinning = function() {
+  drawThisFrame() {
     return true;
   }
 
 }
 
 
-function OpenForEditState() {
+class DeceleratingState {
 
-  this.tick = function(wheel) {
+  constructor(wheel) {
+    this.age = 0;
+    this.MAX_AGE = wheel.getStateTimeLengths().decelerating;
+    const decelTicks = this.MAX_AGE;
+    const startSpeed = wheel.speed;
+    const stopSpeed = 0.00015;
+    this.deceleration = Math.exp(Math.log(stopSpeed/startSpeed)/decelTicks);
   }
 
-  this.click = function(wheel) {
-    wheel.calculateDeceleration();
-    wheel.state = new AcceleratingState();
+  tick(wheel) {
+    wheel.speed = wheel.speed * this.deceleration;
+    this.age += 1;
+    if (this.age > this.MAX_AGE) {
+      wheel.state = new PostSpinState(wheel);
+    }
   }
 
-  this.editAllowed = function() {
+  click(wheel) {
+  }
+
+  isSpinning() {
     return true;
   }
 
-  this.isSpinning = function() {
-    return false;
+  drawThisFrame() {
+    return true;
   }
 
 }
 
+
+class PostSpinState {
+
+  constructor(wheel) {
+    wheel.speed = 0;
+    wheel.spinIsDone();
+  }
+
+  tick(wheel) {
+  }
+
+  click(wheel) {
+    wheel.state = new AcceleratingState(wheel);
+  }
+
+  isSpinning() {
+    return false;
+  }
+
+  drawThisFrame() {
+    return true;
+  }
+
+}

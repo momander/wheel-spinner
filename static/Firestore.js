@@ -54,7 +54,7 @@ export async function logWheelRead(db, serverNow, uid, wheelTitle) {
   }
 }
 
-export async function deleteWheel(db, uid, wheelTitle) {
+export async function deleteSavedWheel(db, uid, wheelTitle) {
   const title = Util.sanitizeWheelTitle(wheelTitle);
   await db.doc(`accounts/${uid}/wheels/${title}`).delete();
 }
@@ -71,17 +71,6 @@ export async function saveWheel(db, serverNow, uid, config) {
   }
 }
 
-export async function deleteAccount(db, uid) {
-  const batch = db.batch();
-  const snap = await db.collection(`accounts/${uid}/wheels`).get();
-  snap.forEach(function(doc) {
-    batch.delete(doc.ref);
-  })
-  const doc = await db.doc(`accounts/${uid}`).get();
-  batch.delete(doc.ref);
-  await batch.commit();
-}
-
 export async function getDirtyWords(db) {
   const docSnapshot = await db.doc("settings/DIRTY_WORDS").get();
   return docSnapshot.data().value.sort();
@@ -90,6 +79,16 @@ export async function getDirtyWords(db) {
 export async function setDirtyWords(db, words) {
   const formattedWords = words.map(w => w.toLowerCase()).sort();
   await db.doc("settings/DIRTY_WORDS").set({value: formattedWords});
+}
+
+export async function getAdmins(db) {
+  const querySnapshot = await db.collection('admins').orderBy('name').get();
+  return querySnapshot.docs.map(doc => doc.data());
+}
+
+export async function getEarningsPerReview(db) {
+  const doc = await db.doc('settings/EARNINGS_PER_REVIEW').get();
+  return parseFloat(doc.data().value);
 }
 
 export async function deleteAdmin(db, uid) {
@@ -101,6 +100,16 @@ export async function addAdmin(db, uid, name) {
     uid: uid,
     name: name,
   });
+}
+
+export async function saveCarousel(db, carousel) {
+  const batch = db.batch();
+  const querySnap = await db.collection('carousels').get();
+  querySnap.forEach(doc => batch.delete(doc.ref))
+  await batch.commit();
+  for (let i=0; i<carousel.length; i++) {
+    await db.doc(`carousels/${i}`).set(carousel[i]);
+  }
 }
 
 export async function approveSharedWheel(db, increment, path, uid) {
@@ -143,34 +152,52 @@ export async function getSharedWheel(db, path) {
 export async function getNextSharedWheelForReview(db) {
   let wheel;
   if (Math.random() < 0.1) {
-    const querySnapshot = await db.collection('shared-wheels-review-queue')
-                                  .where('reviewStatus', '==', 'Suspicious')
-                                  .limit(1)
-                                  .get();
-    if (querySnapshot.size>0) {
-      wheel = querySnapshot.docs[0].data();
-    }
+    wheel = await getSuspiciousWheel(db);
   }
-  if (!wheel && Math.random() < 0.5) {
-    const querySnapshot = await db.collection('shared-wheels-review-queue')
-                                  .where('predictedApproval', '<', 0.7)
-                                  .orderBy('predictedApproval', 'asc')
-                                  .limit(1)
-                                  .get();
-    if (querySnapshot.size>0) {
-      wheel = querySnapshot.docs[0].data();
-    }
+  if (!wheel && Math.random() < 0.3) {
+    wheel = await getLowPredictedApprovalWheel(db);
+  }
+  if (!wheel && Math.random() < 0.4) {
+    wheel = await getRecentlyViewedWheel(db);
   }
   if (!wheel) {
-    const querySnapshot = await db.collection('shared-wheels-review-queue')
-                                  .orderBy('lastRead', 'desc')
-                                  .limit(1)
-                                  .get();
-    if (querySnapshot.size>0) {
-      wheel = querySnapshot.docs[0].data();
-    }
+    wheel = await getPopularWheel(db);
   }
   return wheel;
+}
+
+async function getSuspiciousWheel(db) {
+  const querySnapshot = await db.collection('shared-wheels-review-queue')
+                                .where('reviewStatus', '==', 'Suspicious')
+                                .limit(1)
+                                .get();
+  if (querySnapshot.size>0) return querySnapshot.docs[0].data();
+}
+
+async function getLowPredictedApprovalWheel(db) {
+  const querySnapshot = await db.collection('shared-wheels-review-queue')
+                                .where('predictedApproval', '<', 0.7)
+                                .where('predictedApproval', '>=', 0)
+                                .orderBy('predictedApproval', 'asc')
+                                .limit(1)
+                                .get();
+  if (querySnapshot.size>0) return querySnapshot.docs[0].data();
+}
+
+async function getRecentlyViewedWheel(db) {
+  const querySnapshot = await db.collection('shared-wheels-review-queue')
+                                .orderBy('lastRead', 'desc')
+                                .limit(1)
+                                .get();
+  if (querySnapshot.size>0) return querySnapshot.docs[0].data();
+}
+
+async function getPopularWheel(db) {
+  const querySnapshot = await db.collection('shared-wheels-review-queue')
+                                .orderBy('readCount', 'desc')
+                                .limit(1)
+                                .get();
+  if (querySnapshot.size>0) return querySnapshot.docs[0].data();
 }
 
 async function wheelExists(db, uid, title) {

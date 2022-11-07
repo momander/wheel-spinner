@@ -1,0 +1,58 @@
+{
+  "sounds.Sound effects": {
+    "sounds.Ticking sound": {"value": "ticking-sound"},
+    "sounds.No sound": {"value": "no-sound"},
+    "sounds.Random music": {"value": "random-music"}
+  },
+  "sounds.Pop music": {
+    "Life of Riley": {"value": "cheerful-music", "musicFile": "/third_party/filmmusic-io/life-of-riley-by-kevin-macleod-from-filmmusic-io.mp3"}
+  },
+  "sounds.Easy listening": {
+    "Groundwork": {"value": "groundwork", "musicFile": "/third_party/filmmusic-io/groundwork-by-kevin-macleod-from-filmmusic-io.mp3"},
+    "Happy bee": {"value": "happy-bee", "musicFile": "/third_party/filmmusic-io/happy-bee-by-kevin-macleod-from-filmmusic-io.mp3"},
+    "sounds.Random easy listening": {"value": "random: Easy listening"}
+  },
+  "sounds.Cinematic music": {
+    "Wretched destroyer": {"value": "spooky-music", "musicFile": "/third_party/filmmusic-io/wretched-destroyer-by-kevin-macleod-from-filmmusic-io.mp3"}
+  },
+  "Reggae & Reggaeton": {
+    "Easy jam": {"value": "reggae-music", "musicFile": "/third_party/filmmusic-io/easy-jam-by-kevin-macleod-from-filmmusic-io.mp3"}
+  },
+  "sounds.Silent film score": {
+    "Amazing plan": {"value": "piano-music", "musicFile": "/third_party/filmmusic-io/amazing-plan-by-kevin-macleod-from-filmmusic-io.mp3"},
+    "Le grand chase": {"value": "fast-piano-music", "musicFile": "/third_party/filmmusic-io/le-grand-chase-by-kevin-macleod-from-filmmusic-io.mp3"},
+    "Merry-go-round": {"value": "merry-go-round", "musicFile": "/third_party/filmmusic-io/merry-go-by-kevin-macleod-from-filmmusic-io.mp3"},
+    "Super circus": {"value": "circus-music", "musicFile": "/third_party/filmmusic-io/super-circus-by-kevin-macleod-from-filmmusic-io.mp3"},
+    "sounds.Random silent film score": {"value": "random: Silent film score"}
+  },
+  "Dance & Techno": {
+    "Raving energy": {"value": "edm-music", "musicFile": "/third_party/filmmusic-io/raving-energy-faster-by-kevin-macleod-from-filmmusic-io.mp3"}
+  },
+  "Disco": {
+    "Stringed disco": {"value": "disco-music", "musicFile": "/third_party/filmmusic-io/stringed-disco-by-kevin-macleod-from-filmmusic-io.mp3"}
+  },
+  "Electronica": {
+    "Deep and dirty": {"value": "dubstep-music", "musicFile": "/third_party/filmmusic-io/deep-and-dirty-by-kevin-macleod-from-filmmusic-io.mp3"},
+    "Phat sketch": {"value": "elevator-hip-hop", "musicFile": "/third_party/filmmusic-io/phat-sketch-by-kevin-macleod-from-filmmusic-io.mp3"},
+    "Son of a rocket": {"value": "grooving", "musicFile": "/third_party/filmmusic-io/son-of-a-rocket-by-kevin-macleod-from-filmmusic-io.mp3"},
+    "sounds.Random electronica": {"value": "random: Electronica"}
+  },
+  "Funk": {
+    "Celebration": {"value": "funk-music", "musicFile": "/third_party/filmmusic-io/celebration-by-kevin-macleod-from-filmmusic-io.mp3"}
+  },
+  "Ballroom dancing": {
+    "Lobby time": {"value": "lobby-music", "musicFile": "/third_party/filmmusic-io/lobby-time-by-kevin-macleod-from-filmmusic-io.mp3"}
+  },
+  "sounds.Rock music": {
+    "Welcome to the show": {"value": "rock-music", "musicFile": "/third_party/filmmusic-io/welcome-to-the-show-by-kevin-macleod-from-filmmusic-io.mp3"}
+  },
+  "sounds.World music": {
+    "Galway": {"value": "irish-folk-music", "musicFile": "/third_party/filmmusic-io/galway-by-kevin-macleod-from-filmmusic-io.mp3"}
+  },
+  "Polka": {
+    "Tada polka": {"value": "polka", "musicFile": "/third_party/filmmusic-io/tada-polka-by-philip-rice-from-filmmusic-io.mp3"}
+  },
+  "sounds.Winter holidays": {
+    "Oh Christmas tree": {"value": "christmas-music", "musicFile": "/third_party/filmmusic-io/oh-christmas-tree-by-kevin-macleod-from-filmmusic-io.mp3"}
+  }
+}

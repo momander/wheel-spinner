@@ -17,21 +17,26 @@ import '@babel/polyfill';
 import 'whatwg-fetch';
 import * as Util from './Util.js';
 
-export async function createSharedWheel(editable, wheelConfig) {
-  const payload = {editable: editable, wheelConfig: wheelConfig.getValues()};
-  const url = process.env.FUNCTION_PREFIX + '/createSharedWheel2';
-  const response = await fetch(url, {
+export async function createSharedWheel(copyable, wheelConfig, idToken) {
+  const payload = {copyable: copyable, wheelConfig: wheelConfig.getValues()};
+  const url = process.env.FUNCTION_PREFIX + '/createSharedWheel3';
+  const request = {
     method: 'POST',
     mode: 'cors',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(payload)
-  });
+  };
+  if (idToken) {
+    request.headers['authorization'] = idToken;
+  }
+  const response = await fetch(url, request);
   const respObj = await response.json();
   if (respObj.hasOwnProperty('error')) throw respObj.error;
   return respObj.path;
 }
 
 export async function logSharedWheelRead(path) {
+  if (!path) return;
   const payload = {path: path};
   const url = process.env.FUNCTION_PREFIX + '/logSharedWheelRead';
   const response = await fetch(url, {
@@ -52,6 +57,30 @@ export async function getSharedWheel(path) {
   return respObj.wheelConfig;
 }
 
+export async function getSharedWheels(idToken) {
+  const url = process.env.FUNCTION_PREFIX + `/getSharedWheels`;
+  const response = await fetch(url, {
+    method: 'GET',
+    mode: 'cors',
+    headers: {'authorization': idToken, 'Content-Type': 'application/json'}
+  });
+  const respObj = await response.json();
+  return respObj.wheels;
+}
+
+export async function deleteSharedWheel(idToken, path) {
+  const payload = {path: path};
+  const url = process.env.FUNCTION_PREFIX + `/deleteSharedWheel`;
+  const response = await fetch(url, {
+    method: 'POST',
+    mode: 'cors',
+    headers: {'authorization': idToken, 'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const respObj = await response.json();
+  return respObj.wheels;
+}
+
 export async function fetchSocialMediaUsers(searchTerm) {
   const url = process.env.FUNCTION_PREFIX +
     `/getTwitterUserNames2/${encodeURIComponent(searchTerm)}`;
@@ -63,17 +92,104 @@ export async function fetchSocialMediaUsers(searchTerm) {
   return respObj;
 }
 
-export async function convertAccount(idToken) {
+export async function convertAccount(oldIdToken, newIdToken) {
+  const payload = {oldIdToken: oldIdToken};
   const url = process.env.FUNCTION_PREFIX + '/convertAccount';
   try {
     const response = await fetch(url, {
       method: 'POST',
       mode: 'cors',
-      headers: {'authorization': idToken}
+      headers: {'authorization': newIdToken, 'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
     });
     await response.json();
   }
   catch(ex) {
     Util.trackException(ex);
+  }
+}
+
+export async function deleteAccount(idToken) {
+  const url = process.env.FUNCTION_PREFIX + '/deleteAccount';
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {'authorization': idToken, 'Content-Type': 'application/json'}
+    });
+    await response.json();
+  }
+  catch(ex) {
+    Util.trackException(ex);
+  }
+}
+
+export async function getCarousels() {
+  try {
+    const url = process.env.FUNCTION_PREFIX + `/getCarousels`;
+    const response = await fetch(url, {
+      method: 'GET'
+    });
+    const respObj = await response.json();
+    return respObj;
+  }
+  catch(ex) {
+    Util.trackException(ex);
+    return [''];
+  }
+}
+
+export async function getNumberOfWheelsInReviewQueue(idToken) {
+  const url = process.env.FUNCTION_PREFIX + '/getNumberOfWheelsInReviewQueue';
+  const response = await fetch(url, {
+    method: 'GET',
+    mode: 'cors',
+    headers: {'authorization': idToken}
+  });
+  if (response.status == 403) throw 'Please log in as an admin user';
+  const respObj = await response.json();
+  if (respObj.error) throw respObj.error;
+  return respObj.wheelsInReviewQueue;
+}
+
+export async function translate(idToken, entries) {
+  const url = process.env.FUNCTION_PREFIX + '/translate';
+  const response = await fetch(url, {
+    method: 'POST',
+    mode: 'cors',
+    headers: new Headers({
+      'Content-Type': 'application/json',
+      'authorization': idToken
+    }),
+    body: JSON.stringify({text: entries})
+  });
+  if (response.status == 403) throw 'Please log in as an admin user';
+  const resp = await response.json();
+  return resp.translations;
+}
+
+export async function userIsAdmin(idToken) {
+  const url = process.env.FUNCTION_PREFIX + '/userIsAdmin';
+  const response = await fetch(url, {
+    method: 'GET',
+    mode: 'cors',
+    headers: {'authorization': idToken}
+  });
+  const respObj = await response.json();
+  return respObj.userIsAdmin;
+}
+
+export async function getSpinStats() {
+  try {
+    const url = process.env.FUNCTION_PREFIX + `/getSpinStats`;
+    const response = await fetch(url, {
+      method: 'GET'
+    });
+    const respObj = await response.json();
+    return respObj;
+  }
+  catch(ex) {
+    Util.trackException(ex);
+    return {};
   }
 }

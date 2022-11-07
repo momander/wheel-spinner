@@ -24,6 +24,7 @@ const db = admin.firestore();
 
 app.post('/', async (req, res) => {
   try {
+    console.log(`Logging a read for wheel ${req.body.path}`);
     await db.collection('shared-wheel-reads').doc().set({
       path: req.body.path,
       readDate: new Date()

@@ -15,9 +15,11 @@ limitations under the License.
 */
 const nonEnglishDomains = [ {partialName: 'noms', locale: 'fr'} ];
 const locales = [
-  {name: 'en', humanName: 'English',  googleName: 'en_US', twitterName: 'en', file: 'en-US.json'},
-  {name: 'fr', humanName: 'Français', googleName: 'fr_FR', twitterName: 'fr', file: 'fr-FR.json'},
-  {name: 'sv', humanName: 'Svenska',  googleName: 'sv_SE', twitterName: 'sv', file: 'sv-SE.json'},
+  {name: 'de',    humanName: 'Deutsch',          flag: '🇩🇪',         googleName: 'de_DE', twitterName: 'de',    file: 'de-DE.json'},
+  {name: 'en-PI', humanName: 'English (Pirate)', flag: '🏴‍☠️',         googleName: 'en_US', twitterName: 'en',    file: 'en-PI.json'},
+  {name: 'en',    humanName: 'English',          flag: '🇺🇸 🇬🇧 🇨🇦 🇦🇺', googleName: 'en_US', twitterName: 'en',    file: 'en-US.json'},
+  {name: 'fr',    humanName: 'Français',         flag: '🇫🇷 🇨🇦 🇧🇪 🇨🇭', googleName: 'fr_FR', twitterName: 'fr',    file: 'fr-FR.json'},
+  {name: 'sv',    humanName: 'Svenska',          flag: '🇸🇪',       googleName: 'sv_SE', twitterName: 'sv',    file: 'sv-SE.json'},
 ]
 
 export function getLocale(hostName, pathName) {
@@ -65,10 +67,14 @@ export function getLangTipLocale(systemLocale, navigatorLanguages) {
   return shouldShowLanguageTip ? getClosestSupportedLocale(userLocale) : '';
 }
 
-export function getNamesForAll() {
+export function getNamesForAll(includeFlags) {
   return locales
-           .map(locale => ({name: locale.name, humanName: locale.humanName}))
-           .sort((a, b) => a.humanName.localeCompare(b.humanName))
+            .map(locale => {
+              let humanName = locale.humanName;
+              if (includeFlags) humanName += ' ' + locale.flag;
+              return {name: locale.name, humanName: humanName}
+            })
+            .sort((a, b) => a.humanName.localeCompare(b.humanName))
 }
 
 export function getDomainLocale(hostName) {

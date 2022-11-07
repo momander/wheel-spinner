@@ -41,7 +41,6 @@ limitations under the License.
 </template>
 
 <script>
-  import * as ServerFunctions from './ServerFunctions.js';
   import * as Util from './Util.js';
 
   export default {
@@ -58,16 +57,13 @@ limitations under the License.
         Util.trackEvent('Wheel', 'GetSocialMediaUsers', this.searchTerm);
         try {
           this.$emit('start-wait-animation');
-          const users = await ServerFunctions.fetchSocialMediaUsers(this.searchTerm);
-          if (users) {
-            this.$store.commit('setNames', users);
-            this.$store.commit('setWheelTitle', '');
-            const message = this.$t(
-              'twitterdialog.Found Twitter users',
-              {userCount: users.length, term: this.searchTerm}
-            );
-            this.$emit('show-snackbar-message', message);
-          }
+          await this.$store.dispatch('setAdvanced', false);
+          await this.$store.dispatch('fetchSocialMediaUsers', this.searchTerm);
+          const message = this.$t(
+            'twitterdialog.Found Twitter users',
+            {userCount: this.$store.getters.entryCount, term: this.searchTerm}
+          );
+          this.$emit('show-snackbar-message', message);
         }
         catch (ex) {
           Util.trackException(ex);

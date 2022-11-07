@@ -14,28 +14,43 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <span>
-    <b-button size="is-small" type="is-light" :disabled="buttonsDisabled" @click="shuffle">
-      <i class="fas fa-random"></i>&nbsp;{{ $t('textboxbuttons.Shuffle') }}
-    </b-button>
-    <b-button size="is-small" type="is-light" :disabled="buttonsDisabled" @click="sort">
-      <i class="fas fa-sort-alpha-up"></i>&nbsp;{{ $t('textboxbuttons.Sort') }}
-    </b-button>
-    <b-upload accept="image/*" multiple v-model="uploadedImage" :disabled="buttonsDisabled">
-      <a class="button is-small is-light" :disabled="buttonsDisabled">
-        <i class="far fa-image"></i>&nbsp;{{ $t('textboxbuttons.Add image') }}
-      </a>
-    </b-upload>
-  </span>
+  <b-field grouped group-multiline>
+    <p class="control">
+      <b-button size="is-small" type="is-light" :disabled="buttonsDisabled" @click="shuffle">
+        <i class="fas fa-random"></i>&nbsp;{{ $t('textboxbuttons.Shuffle') }}
+      </b-button>
+    </p>
+    <p class="control">
+      <b-button size="is-small" type="is-light" :disabled="buttonsDisabled" @click="sort">
+        <i class="fas fa-sort-alpha-up"></i>&nbsp;{{ $t('textboxbuttons.Sort') }}
+      </b-button>
+    </p>
+    <p class="control" style="margin-top:-1px">
+      <b-upload accept="image/*" multiple v-model="uploadedImage" :disabled="buttonsDisabled">
+        <a class="button is-small is-light" :disabled="buttonsDisabled">
+          <i class="far fa-image"></i>&nbsp;{{ $t('textboxbuttons.Add image') }}
+        </a>
+      </b-upload>
+    </p>
+    <p class="control">
+      <b-checkbox size="is-small" :disabled="buttonsDisabled"
+        v-if="displayAdvancedCheckbox" v-model="wheelIsAdvanced"
+        :key="updateAdvancedCheckbox"
+      >
+        {{ $t('textboxbuttons.Advanced') }}
+      </b-checkbox>
+    </p>
+  </b-field>
 </template>
 
 <script>
   import * as Util from './Util.js';
   import * as ImageUtil from './ImageUtil.js';
+  import { mapGetters } from "vuex";
 
   export default {
     data() {
-      return {uploadedImage: []}
+      return {uploadedImage: [], updateAdvancedCheckbox: 0}
     },
     watch: {
       uploadedImage: function(files) {
@@ -46,8 +61,7 @@ limitations under the License.
           const self = this;
           reader.onload = async function(e) {
             const dataUri = await ImageUtil.optimizeSliceImage(e.target.result);
-            const imageTag = `<img src="${dataUri}" style="height:25px" style="font-size: 1rem;">`;
-            self.$store.commit('appendNames', [imageTag]);
+            self.$store.dispatch('appendImageEntry', dataUri);
           }
           reader.readAsDataURL(file);
         }
@@ -56,18 +70,47 @@ limitations under the License.
     },
     computed: {
       buttonsDisabled() {
-        const appStatus = this.$store.state.appStatus;
-        return appStatus.sheetLinked || appStatus.wheelSpinning;
-      }
+        return this.sheetLinked || this.wheelIsBusy;
+      },
+      wheelIsAdvanced: {
+        get: function() {
+          return this.$store.getters.wheelIsAdvanced;
+        },
+        set: function(newValue) {
+          if (!newValue) {
+            this.$buefy.dialog.confirm({
+              title: this.$t('textboxbuttons.Revert from advanced'),
+              message: this.$t('textboxbuttons.Reverting will reset'),
+              cancelText: this.$t('common.Cancel'),
+              confirmText: this.$t('common.Continue'),
+              type: 'is-warning',
+              hasIcon: true,
+              onConfirm: () => {
+                this.$store.dispatch('setAdvanced', newValue);
+                Util.trackEvent('Wheel', 'RevertFromAdvanced');
+              },
+              onCancel: () => this.updateAdvancedCheckbox++
+            })
+          }
+          else {
+            this.$store.dispatch('setAdvanced', newValue);
+            Util.trackEvent('Wheel', 'ConvertToAdvanced');
+          }
+        }
+      },
+      displayAdvancedCheckbox() {
+        return !Util.browserIsIE();
+      },
+      ...mapGetters(['sheetLinked', 'wheelIsBusy', 'wheelType'])
     },
     methods: {
       shuffle() {
-        Util.trackEvent('Wheel', 'ShuffleNames', '');
-        this.$store.commit('shuffleNames');
+        Util.trackEvent('Wheel', 'ShuffleEntries', '');
+        this.$store.commit('shuffleEntries');
       },
       sort() {
-        Util.trackEvent('Wheel', 'SortNames', '');
-        this.$store.commit('sortNames');
+        Util.trackEvent('Wheel', 'SortEntries', '');
+        this.$store.commit('sortEntries');
       },
     }
   }

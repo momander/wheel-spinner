@@ -21,12 +21,15 @@ limitations under the License.
 // time) until it returns false.
 // ----------------------------------------------------------------------
 
-export default function Ticker() {
-  this.lastFrameTimeMs = 0;
-  this.delta = 0;
-  this.timestep = 1000 / 60;
+export default class Ticker {
 
-  this.setTimestamp = function(timestamp) {
+  constructor() {
+    this.lastFrameTimeMs = 0;
+    this.delta = 0;
+    this.timestep = 1000 / 60;
+  }
+
+  setTimestamp(timestamp) {
     if (this.lastFrameTimeMs == 0) {
       // This is the first frame. We need to run tick once to init.
       this.delta = this.timestep;
@@ -37,8 +40,8 @@ export default function Ticker() {
     this.lastFrameTimeMs = timestamp;
   }
 
-  this.shouldTick = function() {
-    var retVal = (this.delta >= this.timestep);
+  shouldTick() {
+    const retVal = (this.delta >= this.timestep);
     if (retVal) this.delta -= this.timestep;
     return retVal;
   }

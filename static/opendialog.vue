@@ -26,21 +26,12 @@ limitations under the License.
           <p>
             {{ $t('opendialog.To open wheels') }}
           </p>
+          <div id="auth-container"></div>
         </section>
         <footer class="modal-card-foot" style="justify-content:flex-end">
           <b-button @click="enter_inactive()">
             {{ $t('common.Cancel') }}
           </b-button>
-          <input type="image" style="height:40px; margin-right:10px"
-            alt="Sign in with Google"
-            src="/images/btn_google_signin_dark_normal_web@2x.png"
-            @click="enter_userIsLoggingIn('Google')"
-          >
-          <input type="image"
-            alt="Sign in with Twitter"
-            src="/images/sign-in-with-twitter-gray.png.img.fullhd.medium.png"
-            @click="enter_userIsLoggingIn('Twitter')"
-          >
         </footer>
       </div>
     </b-modal>
@@ -60,14 +51,14 @@ limitations under the License.
         </header>
         <section class="modal-card-body can-go-dark">
           <table class="table can-go-dark">
-            <tr v-for="wheel in wheels" :key="wheel.title">
+            <tr v-for="wheel in savedWheels" :key="wheel.title">
               <td>{{ wheel.title }}</td>
               <td>
                 <b-button type="is-light" @click="enter_openingWheel(wheel.title)">
                   <i class="far fa-folder-open"></i>&nbsp;{{ $t('common.Open') }}
                 </b-button>
               </td>
-              <td v-if="$store.state.appStatus.online">
+              <td v-if="online">
                 <b-button type="is-light" @click="enter_confirmingDelete(wheel.title)">
                   <i class="far fa-trash-alt"></i>&nbsp;{{ $t('common.Delete') }}
                 </b-button>
@@ -91,27 +82,18 @@ limitations under the License.
 </template>
 
 <script>
-  import * as Firebase from './Firebase.js';
   import * as Util from './Util.js';
-  import WheelConfig from './WheelConfig.js';
   import profiledropdown from './profiledropdown.vue';
-  import * as ServerFunctions from './ServerFunctions.js';
-  import './images/btn_google_signin_dark_normal_web@2x.png';
-  import './images/sign-in-with-twitter-gray.png.img.fullhd.medium.png';
+  import { mapGetters } from "vuex";
 
   export default {
     components: { profiledropdown },
     data() {
-      return {
-        wheels: [], fsm: 'inactive'
-      }
+      return { fsm: 'inactive' }
     },
     computed: {
       noSavedWheels() {
-        return (this.wheels.length==0);
-      },
-      uid() {
-        return this.$store.state.appStatus.userUid
+        return (this.savedWheels.length==0);
       },
       displayLoginDialog: {
         get: function() {
@@ -130,6 +112,7 @@ limitations under the License.
           if (newValue == false) this.fsm = 'inactive';
         }
       },
+      ...mapGetters(['savedWheels', 'online'])
     },
     methods: {
       async show() {
@@ -138,17 +121,20 @@ limitations under the License.
       async enter_loadingLibraries() {
         this.fsm = 'loadingLibraries';
         this.$emit('start-wait-animation');
-        await Firebase.loadLibraries();
-        if (await Firebase.userIsLoggedIn()) {
-          const user = await Firebase.getLoggedInUser();
-          this.$store.commit('logInUser', {
-            photoUrl: user.photoURL, displayName: user.displayName, uid: user.uid
-          });
+        let userIsLoggedIn;
+        try {
+          userIsLoggedIn = await this.$store.dispatch('userIsLoggedIn');
+        }
+        catch(ex) {
+          this.enter_authError(ex);
+        }
+        finally {
           this.$emit('stop-wait-animation');
+        }
+        if (userIsLoggedIn) {
           this.enter_loadingWheels();
         }
         else {
-          this.$emit('stop-wait-animation');
           this.enter_userIsPickingLoginMethod();
         }
       },
@@ -157,27 +143,19 @@ limitations under the License.
       },
       enter_userIsPickingLoginMethod() {
         this.fsm = 'userIsPickingLoginMethod';
-      },
-      async enter_userIsLoggingIn(providerName) {
-        this.fsm = 'userIsLoggingIn';
-        try {
-          Util.trackEvent('Wheel', `LoginForOpenAttempt-${providerName}`, '');
-          this.$emit('start-wait-animation');
-          const user = await Firebase.logIn(providerName, this.$i18n.locale);
-          this.$store.commit('logInUser', {
-            photoUrl: user.photoURL, displayName: user.displayName, uid: user.uid
-          });
-          await ServerFunctions.convertAccount(await user.getIdToken());
-          this.$emit('stop-wait-animation');
-          Util.trackEvent('Wheel', `LoginForOpenSuccess-${providerName}`, '');
-          this.enter_loadingWheels();
-        }
-        catch (ex) {
-          this.$emit('stop-wait-animation');
-          Util.trackException(ex, {op: `LoginForOpenFailure-${providerName}`});
-          Util.trackEvent('Wheel', `LoginForOpenFailure-${providerName}`, ex.toString());
-          this.enter_authError(ex);
-        }
+        this.$nextTick(async function() {
+          try {
+            Util.displayWindowsRtWarning();
+            Util.trackEvent('Wheel', `LoginForOpenAttempt`, '');
+            await this.$store.dispatch('loginWithUi', 'auth-container');
+            Util.trackEvent('Wheel', `LoginForOpenSuccess`, '');
+            this.enter_loadingWheels();
+          }
+          catch (ex) {
+            Util.trackEvent('Wheel', `LoginForOpenFailure`, ex.toString());
+            this.enter_authError(ex);
+          }
+        })
       },
       enter_userIsPickingWheel() {
         this.fsm = 'userIsPickingWheel';
@@ -185,26 +163,32 @@ limitations under the License.
       async enter_loadingWheels() {
         this.fsm = 'loadingWheels';
         this.$emit('start-wait-animation');
-        this.wheels = await Firebase.getWheels(this.uid);
-        this.$emit('stop-wait-animation');
-        Firebase.logUserActivity(this.uid);
+        try {
+          await this.$store.dispatch('loadSavedWheels');
+        }
+        catch(ex) {
+          this.enter_authError(ex);
+        }
+        finally {
+          this.$emit('stop-wait-animation');
+        }
         this.enter_userIsPickingWheel();
       },
       enter_openingWheel(wheelTitle) {
         this.fsm = 'openingWheel';
-        Firebase.logWheelRead(this.uid, wheelTitle);
-        const result = this.wheels.find(wheel => wheel.title==wheelTitle);
-        const wheelConfig = new WheelConfig(this.$t('common.We have a winner!'));
-        wheelConfig.loadValues(result);
-        this.$store.commit('setWheelConfig', wheelConfig);
+        const wheel = this.savedWheels.find(w => w.title==wheelTitle);
+        this.$store.dispatch('logWheelRead', wheelTitle);
+        this.$store.commit('setWheelConfig', wheel);
+        this.$store.commit('clearWinners');
         this.$emit('reset-wheel-rotation');
+        this.$emit('reset-address-bar');
         this.enter_inactive();
       },
       enter_confirmingDelete(wheelTitle) {
         this.fsm = 'confirmingDelete';
         this.$buefy.dialog.confirm({
           title: this.$t('opendialog.Delete wheel'),
-          message: this.$t('opendialog.Are you sure', {wheelTitle: Util.getHtmlAsText(wheelTitle)}),
+          message: this.$t('opendialog.Are you sure', {wheelTitle: Util.escapeHtml(wheelTitle)}),
           cancelText: this.$t('common.Cancel'),
           confirmText: this.$t('common.Delete'),
           type: 'is-danger',
@@ -215,8 +199,7 @@ limitations under the License.
       },
       enter_authError(exception) {
         this.fsm = 'authError';
-        Firebase.logOut();
-        this.$store.commit('logOutUser');
+        this.$store.dispatch('logOut');
         this.$emit('auth-error', exception);
         this.enter_inactive();
       },
@@ -224,8 +207,8 @@ limitations under the License.
         this.fsm = 'deletingWheel';
         try {
           this.$emit('start-wait-animation');
-          await Firebase.deleteWheel(this.uid, wheelTitle);
-          this.wheels = await Firebase.getWheels(this.uid);
+          await this.$store.dispatch('deleteSavedWheel', wheelTitle);
+          await this.$store.dispatch('loadSavedWheels');
           this.$emit('stop-wait-animation');
           this.enter_userIsPickingWheel();
         }

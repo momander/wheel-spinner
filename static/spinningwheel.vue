@@ -17,85 +17,67 @@ limitations under the License.
   <div class="container" style="text-align: center">
     <canvas id="wheelCanvas" style="width:100%" @click="spin()" width="700" height="700">
     </canvas>
-    <div v-if="!isTouchScreen" id="instructionsLayer" ref="instructionsLayer" @click="spin()">
-      <div class="instructionsText" id="topInstruction" style="padding-top: 20%">
-        {{ $t('spinningwheel.Click to spin') }}
-      </div>
-      <div class="instructionsText" id="bottomInstruction" style="padding-top: 60%">
-        {{ $t('spinningwheel.or press ctrl+enter') }}
-      </div>
-    </div>
-    <div v-if="isTouchScreen" id="instructionsLayer" ref="instructionsLayer" @click="spin()">
-      <div class="instructionsText" id="topInstruction" style="padding-top: 20%">
-        {{ $t('spinningwheel.Tap to spin') }}
-      </div>
-    </div>
+    <wheelOverlayText
+      v-if="displayOverlayText"
+      v-on:click="spin()"
+    />
   </div>
 </template>
 
 <script>
   import Wheel from './Wheel.js';
+  import wheelOverlayText from './wheelOverlayText.vue';
   import * as Util from './Util.js';
   import Ticker from './Ticker.js';
-  import CircleType from 'circletype';
-  import * as Locales from './Locales.js';
+  import { mapGetters } from "vuex";
 
   export default {
+    components: { wheelOverlayText },
     data() {
       return {
-        myWheel: new Wheel(), myTicker: new Ticker(),
-        isTouchScreen: Util.isTouchScreen()
+        myWheel: {}, myTicker: new Ticker(), displayOverlayText: true, animationFrameID: undefined
       }
     },
     mounted() {
       this.myWheel = new Wheel();
+      this.myWheel.configure(this.wheelConfig, this.darkMode);
+      this.myWheel.setEntries(this.wheelConfig.entries, this.wheelConfig.maxNames,
+                                this.wheelConfig.allowDuplicates);
       this.tick(0);
-      this.setupOverlay();
       this.startKeyListener();
     },
+    destroyed() {
+      window.cancelAnimationFrame(this.animationFrameID);
+      this.animationFrameID = undefined;
+    },
     computed: {
-      wheelConfig() {
-        return this.$store.state.wheelConfig;
-      },
-      names() {
-        return this.$store.state.wheelConfig.names;
-      },
-      preferences() {
-        return this.$store.state.preferences
+      entries() {
+        return this.wheelConfig.entries;
       },
       hasEntries() {
-        return (this.$store.state.wheelConfig.names.length>0);
-      }
+        return this.entries.length>0;
+      },
+      locale() {
+        return this.$i18n.locale;
+      },
+      ...mapGetters(['wheelConfig', 'darkMode', 'version', 'wheelIsBusy'])
     },
     watch: {
       wheelConfig(newValue, oldValue) {
-        this.configureWheel();
+        this.myWheel.configure(this.wheelConfig, this.darkMode);
       },
-      preferences(newValue) {
-        this.configureWheel();
+      darkMode() {
+        this.myWheel.configure(this.wheelConfig, this.darkMode);
       },
-      names(newValue, oldValue) {
-        this.myWheel.setNames(newValue, this.wheelConfig.maxNames,
-                              this.wheelConfig.allowDuplicates);
+      entries(newValue, oldValue) {
+        this.myWheel.setEntries(newValue, this.wheelConfig.maxNames,
+                                this.wheelConfig.allowDuplicates);
       },
+      locale(newValue, oldValue) {
+        this.destroyAndRecreateOverlayText();
+      }
     },
     methods: {
-      setupOverlay() {
-        const side = document.getElementById('wheelCanvas').offsetWidth;
-        const fontSize = `${Math.round(side/20)}px`;
-        document.getElementById('instructionsLayer').style.fontSize = fontSize;
-        if (this.cantBeDisplayedInCircleType(this.$i18n.locale)) return;
-        const radius = side / 3;
-        new CircleType(document.getElementById('topInstruction'))
-          .radius(radius);
-        if (document.getElementById('bottomInstruction')) {
-          new CircleType(document.getElementById('bottomInstruction'))
-            .radius(radius).dir(-1);
-        }
-      },
-      cantBeDisplayedInCircleType(locale) {
-        return ['ar', 'bn', 'fa', 'gu', 'he', 'hi'].includes(locale);
-      },
       startKeyListener() {
         if (!Util.isTouchScreen()) {
           const self = this;
@@ -106,12 +88,16 @@ limitations under the License.
           });
         }
       },
+      destroyAndRecreateOverlayText() {
+        this.displayOverlayText = false;
+        this.$nextTick(() => this.displayOverlayText = true);
+      },
       spin() {
-        if (this.myWheel.isSpinning()) return;
         if (!this.hasEntries) return;
+        if (this.wheelIsBusy) return;
+        this.$store.commit('setWheelBusy', true);
+        this.displayOverlayText = false;
         this.trackInGoogleAnalytics();
-        this.$refs.instructionsLayer.style.display = 'none';
-        this.$store.commit('startWheelSpin');
         this.$emit('wheel-started');
         this.myWheel.click(this.onNameChanged, this.onStopWheelSpin);
       },
@@ -119,44 +105,35 @@ limitations under the License.
         this.$emit('name-changed');
       },
       onStopWheelSpin(winningEntry) {
-        this.$store.commit('stopWheelSpin');
+        this.$store.commit('setWheelBusy', false);
         this.$emit('wheel-stopped', winningEntry);
       },
       trackInGoogleAnalytics() {
-        const defaultNames = this.wheelConfig.getDefaultNames();
-        if (!Util.arraysEqual(this.names, defaultNames)) {
-          const label = this.$store.state.version;
-          Util.trackEvent('Wheel', 'SpinWithCustomNames', label);
+        const label = this.version;
+        if (this.wheelConfig.hasOnlyDefaultEntries()) {
+          Util.trackEvent('Wheel', 'SpinWithDefaultNames', label);
         }
         else {
-          Util.trackEvent('Wheel', 'SpinWithDefaultNames', '');
+          Util.trackEvent('Wheel', 'SpinWithCustomNames', label);
         }
       },
       tick(ms) {
-        this.myTicker.setTimestamp(ms);
-        while (this.myTicker.shouldTick()) {
-          this.myWheel.tick();
+        const canvas = document.getElementById('wheelCanvas');
+        if (canvas) {
+          this.myTicker.setTimestamp(ms);
+          while (this.myTicker.shouldTick()) {
+            this.myWheel.tick();
+          }
+          const context = canvas.getContext('2d');
+          this.myWheel.draw(context);
         }
-        const context = document.getElementById('wheelCanvas').getContext('2d');
-        this.myWheel.draw(context);
-        requestAnimationFrame(this.tick);
+        this.animationFrameID = requestAnimationFrame(this.tick);
       },
       resetRotation() {
         this.myWheel.resetRotation();
       },
       refresh() {
         this.myWheel.refresh();
-      },
-      configureWheel() {
-        this.myWheel.configure(
-          this.$store.state.wheelConfig.getCoalescedColors(),
-          this.$store.state.wheelConfig.getWheelImage(),
-          this.$store.state.wheelConfig.spinTime,
-          this.$store.state.wheelConfig.slowSpin,
-          this.$store.state.wheelConfig.hubSize,
-          this.$store.getters.darkMode ? 
-            '#000' : this.$store.state.wheelConfig.pageBackgroundColor
-        );
       },
     }
   }
@@ -165,17 +142,5 @@ limitations under the License.
 <style scoped>
   .container {
     position: relative;
-  }
-  .instructionsText {
-    width: 100%;
-    height: 100%;            
-    position: absolute;
-    top: 0;
-    left: 0;
-    color: #FFF;
-    text-shadow: 0px 0px 10px #000000;
-    background-color: #00000000;
-    font-family: sans-serif;
-    font-weight: 800;
   }
 </style>

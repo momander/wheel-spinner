@@ -25,7 +25,7 @@ app.get('/', async (req, res) => {
   let deletions = 0;
   while (true) {
     let batch = db.batch();
-    const snap = await getUsedSharedWheels(db, getDaysAgo(180));
+    const snap = await getUsedSharedWheels(db, getDaysAgo(366));
     snap.forEach(function(doc) {
       batch.delete(doc.ref);
       deletions += 1;

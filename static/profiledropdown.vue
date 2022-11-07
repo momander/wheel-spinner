@@ -17,22 +17,20 @@ limitations under the License.
   <b-dropdown position="is-bottom-left" aria-role="list">
     <span slot="trigger" role="button" class="button" style="cursor: pointer">
       <img
-        :src="$store.state.appStatus.userPhotoUrl"
+        :src="$store.getters.userPhotoUrl"
         style="height:30px; border-radius: 50%"
       >
       &nbsp;
       <i class="fas fa-caret-down"></i>
     </span>
     <b-dropdown-item disabled aria-role="listitem">
-      {{ $t('profiledropdown.Signed in as', {name: $store.state.appStatus.userDisplayName}) }}
+      {{ $t('profiledropdown.Signed in as', {name: $store.getters.userDisplayName}) }}
     </b-dropdown-item>
     <b-dropdown-item @click="logOut()" aria-role="listitem">
       {{ $t('profiledropdown.Sign out') }}
     </b-dropdown-item>
-    <b-dropdown-item has-link aria-role="listitem">
-      <a href="/view-account.html">
-        {{ $t('profiledropdown.Export my data') }}
-      </a>
+    <b-dropdown-item @click="$router.push('/export')" aria-role="listitem">
+      {{ $t('profiledropdown.Export my data') }}
     </b-dropdown-item>
     <b-dropdown-item @click="confirmAndDelete()" aria-role="listitem">
       {{ $t('profiledropdown.Delete my account') }}
@@ -41,12 +39,10 @@ limitations under the License.
 </template>
 
 <script>
-  import * as Firebase from './Firebase.js';
-
   export default {
     methods: {
       logOut() {
-        Firebase.logOut();
+        this.$store.dispatch('logOut');
         this.$emit('log-out');
       },
       confirmAndDelete() {
@@ -62,8 +58,8 @@ limitations under the License.
       },
       async deleteAccount() {
         this.$emit('start-wait-animation');
-        await Firebase.deleteAccount(this.$store.state.appStatus.userUid);
-        Firebase.logOut();
+        await this.$store.dispatch('deleteAccount');
+        this.$store.dispatch('resetWheel');
         const msg = this.$t('profiledropdown.Your account and your saved wheels have been deleted');
         this.$emit('show-snackbar-message', msg);
         this.$emit('stop-wait-animation');

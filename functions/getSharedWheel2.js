@@ -26,9 +26,10 @@ app.get('/:path', async (req, res) => {
   try {
     const doc = await db.collection("shared-wheels").doc(req.params.path).get();
     if (doc.exists) {
-      logReviewStatus(doc.data().reviewStatus);
+      logReviewStatus(doc.data().reviewStatus, req.params.path);
       res.status(200).json({wheelConfig: {
         wheelConfig: doc.data().config,
+        copyable: doc.data().copyable,
         editable: doc.data().editable,
         reviewStatus: doc.data().reviewStatus
       }});
@@ -45,6 +46,7 @@ app.get('/:path', async (req, res) => {
 });
 exports.func = () => functions.https.onRequest(app);
 
-function logReviewStatus(reviewStatus) {
+function logReviewStatus(reviewStatus, path) {
+  console.log(`getSharedWheel2 serving wheel "${path}"`);
   console.log(`getSharedWheel2 serving a wheel with status "${reviewStatus}"`);
 }

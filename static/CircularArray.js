@@ -17,6 +17,8 @@ export default class CircularArray {
 
   constructor(array) {
     this.array = array.slice(0);
+    this.length = array.length;
+    this.elementJsonCache = null;
   }
 
   getElement(index) {
@@ -37,10 +39,32 @@ export default class CircularArray {
       index -= this.array.length;
     }
     this.array[index] = value;
+    this.elementJsonCache = null;
   }
 
   getArray() {
     return this.array;
+  }
+
+  slice(startIndex, endIndex) {
+    const retVal = [];
+    for (let i=startIndex; i<endIndex; i++) {
+      retVal.push(this.getElement(i));
+    }
+    return retVal;
+  }
+
+  getNextElement(element) {
+    if (!this.elementJsonCache) {
+      this.elementJsonCache = this.getElementJson();
+    }
+    const jsonToLookFor = JSON.stringify(element);
+    let index = this.elementJsonCache.findIndex(e => e==jsonToLookFor);
+    return this.getElement(index+1);
+  }
+
+  getElementJson() {
+    return this.array.map(e => JSON.stringify(e));
   }
 
 }
